@@ -1,0 +1,250 @@
+HDFS 
+
+Filesystem that manage the storage across the network is called the DISTRIBUTED FILE SYSTEM , if it falls under some Hadoop Rules then it is called as 
+HDFS Hasddop Distributed File Sytem 
+
+HDFS is a filesystem designed for Storing large files with streaming data access patterns running on commodity hardware 
+
+		Very large File => it can store hundred MB TB of data 
+		Streaming data access => build on the idea of Write once read many times 
+		commodity hardware =>  it is built upon the low/cheap hardware 
+		
+		
+HDFS is not Suitable for the Below Applications 
+
+	low latency => Application need low latency access in the ten of milliseconds ( HDFS is optimised for delivering  high throughput of data and  at the expense of latency )
+	lots of small file => since Name node Hold the Filesystem metadata in memory , if we have huge number of small files , metadata  required to store the  images  will be huge resulting reduce performance 
+	multiple writes => As of now there is no support for Multiple Writes , we can append the data to the File 
+	
+HDFS Concepts 
+
+ Filesystem blocks are typically a few kilobytes in size. HDFS has 128MB Block size , 
+ Also  a 1 MB file stored with a block size of 128 MB uses 1 MB of disk space, not 128 MB 
+ HDFS blocks are large compared to disk blocks, and the reason is to minimize the cost of seeks
+
+HDFS ARCHITECTURE
+-------------------
+
+		Refer the Image from github  
+ 
+ An HDFS cluster has two types of nodes operating in a master−worker pattern: 		a namenode (the master) and a  		number of datanodes (workers). 
+ 
+
+		Name Node   - It maintains the Filesystem tree and metadata for all the directories  in the tree  
+					  the information is stored in two ways namespace image and  edit logs 
+					 name node knows which datanode store which block of information 
+		
+		Data Node   -  Datanode are workhorse of the namenode They store and retrieve blocks when they are told to (namenode) they report back to the namenode periodically with the list of blocks that they are storing 
+		
+Without the namenode the filesystem cant be accessed infact the data would be lost , all the files on the filesystem would be lost since there would be no way of knowing how to reconstruct the files from the blocks on the datanodes.
+It is important to make the name node resilient to failures and it has the following Features
+
+1)	HDFS federation   -  Collection of NameNode 
+						How to Handle the increase in need to cluster  if we increase the data node the amount of ram required to store the meta data also increase 
+						so to provide scalability multiple namenode are required
+							each and every NM take care of all the datanode 
+							
+							Each and every datanode should connect to each and every namenode aall the 10 machine should connect to name node 1 and 2 
+2) 	High availability 
+			if we want to bring back the Namenode 
+						1) fsimage of primary NM in the memory of Secondaty NM
+						2) Editlog for all transaction we have to reply back 
+						3) we have to get the block report from the data node then only name node will leave from safemode
+	
+	Method 1 :- Shared Edit Log 
+	----------------------------
+					all the data node connected to all the Name node 
+					all the data node send the block report to both (active and passive ) NM in the Namespace , so both the NM has the same block mapping at nay time 
+					Both the Active and passive namenode share the edit log with the high available shared Storage .
+					
+			When the Active Name Node Failed , passive Namenode should be up and Running , since it has all the Fs image and Edit logs are in common we can easily switch to the Passive namenode 
+			how the switch over happens ?   how we identify the name node is Down ? 
+			Failover 
+			---------
+				Its impossible for the system to know whether Active namenode down . 
+				Active Namenode is not Responding for a longtime (10 sec) it assumes the Namenode is dead and then the stanby (passive) name node use this oppurtunity to become the active NM and all the clients are communicated to the PAssive Namenode 
+				if the Actual NM is not Down due to the Network Failure , 
+			Fencing
+			--------
+				it might actually thought it was up and running so its a disaster then hadoop will do the Fencing process comes to play 
+					it will kill the namenode process which was marjed as dead 
+					it try to remove the access for the shared edit logs 
+					it will do the STONITH = Shot The Other NOde In The Head => it will kill the signal which will kill the Power signal to the other namenode 
+		IF both the Name node (Active and Passive) node goes down then our old friend secondary name node comes into Play  , but we have to all the process manually 			
+		
+	note:-
+		with in a namespace we are having two namenodes which were active and passive namenode 
+		NameSpace = list of all the Files managed by the nameNode 
+		NameNode  = its a physical Machine 
+		lets say if we want 4NM its like we have 8 NM so that we can contribute 16000 Nodes  4 Nodes = 2 name spaces 
+		
+	Method 2: - QJM 
+    -----------------------		
+	   By Default there are 3 Journal Node in the Cluster , they try to keep active and Passive name node in Sync Together. For CDH Journal Node will not start because it has 3 different machine 
+	   when ever the FIle Operation happen ( File creation deletion append ) then active namenode which will always write about the operation in Majority of the Journal Node . Here we have 3 Journal Nodes so acrive namenode should write atleast 2 NM 
+	   passive NM can capable of reading these edit logs from all of the JOurnal Nodes all together . Standby NM keep watching if there is any change in the edit log and if the change is in the majority of the journal Node ..if Yes  it will immediately apply the change to its own edit logs 
+	   so over a time both NM has same edit logs .
+	   
+	   If  failure  happens :- 
+		trigger point => 	1) edit log entry is available in one journal Node and other journal node doesnt have for a long time which means actual NM is down this i sthe trigger point StandBy NameNode to become active 
+		Become active =>	2) what ever available editlog in the Majority journal Node will be applied , since its continously watching failover will be very quick . and it will active then the Failover and Fenching Process will happen like Method1 
+		
+		journal nodes are light weight processes so they can coupled with any hadoop deamons like resource Manger . 
+		
+		Its a Thumb rule to always go for odd Number like 5 7 9 11 					
+			
+	   
+				
+
+		
+			
+BLOCK CACHING 
+--------------
+	Normally a datanode reads blocks from disk, but for frequently accessed files the blocks may be explicitly cached in the datanode’s memory, in an off-heap block cache. 
+	
+	
+
+		
+HDFS READ AND WRITE OPERATION 
+------------------------------
+By default replication factor is configured by dfs.replication=3 
+
+Selection of DataNode 	
+	if the client is part of the cluster , then that will be selected , if the client is not part of the cluster any random node will be selected , 
+	second node will be selected on the Different Rack  ,
+	Third Node will be selected on the Same Rack of second data node 
+
+NODE DISTANCE :-
+------------------
+Block is on same rack and same node then the distance is  0 
+Block is on same rack and on different node then distance is 2 
+Block is on different rack then the distance is 4 
+Block is on the Different data center then the distance is 6 
+
+
+
+WRITE PROCESS
+--------------
+	client made a write request to the Namenode by calling the "Create" Method which will make a RPC call to the Namenode to create the file in the namespace with no block associated with it 
+	
+	Name node performs various Checks  if the file exists or not if the client has valid permisiion or not .otherwise, file creation fails and the client is thrown an
+	IOException. if every thing is fine , it will make the record of the new File 
+	
+	Client Writes the data to the DFSOUTPUTSTREAM which splits the data in to packets and maintain in a internal queue called the data queue 
+	
+	data queue is consumed by the Data Streamer , Data Streamer asks for the block details to write the Information 
+	
+	Namenode  will sent the list of datanodes client can write its data <D3,D7,D12> 	Client Connects to the First Data Node and ask the first datanode to form the Pipeline  with the subsequent data nodes . 
+	
+	client/Data Streamer  writes the data in packets  to first node and first data node forward the date to the second and Third , 
+	
+	The DFSOutputStream also maintains an internal queue of packets that are waiting to be acknowledged by datanodes, called the ack queue. A packet is removed from the ack queue only when it has been acknowledged by all the datanodes in the pipeline
+
+	Once the data is written data nodesend the Ack back to the Previous while the first data node sends its own ACK to the client 
+		
+	When the client has finished writing data, it calls close() on the stream (step 6). This action flushes all the remaining packets to the datanode pipeline and waits for 
+	acknowledgments before contacting the namenode to signal that the file is complete
+	 
+	
+If any datanode fails while data is being written to it, then the following actions are taken
+			First, the pipeline is closed, and any packets in the ack queue are added to the front of the data queue 
+			The current block on the good datanodes is given a new identity, which is communicated to the namenode, so that the partial block on the failed datanode will be deleted if the failed datanode recovers later on. 
+			The failed datanode is removed from the pipeline, and a new pipeline is constructed from the two good datanodes. The remainder of the block’s data is written to the good datanodes in the pipeline. 
+			The namenode notices that the block is under-replicated, and it arranges for a further replica to be created on another node. Subsequent blocks are then treated as normal
+		
+	
+
+
+
+	
+READ Process
+--------------
+
+	Client Sent the Read request to the Name Node by calling the open method  
+	Name node sent the Block details for the data Block1 <D7,D8,D12> Block 2 <D5,D6,D17>
+	namenode will send the closet datanode to the Client to the farthest in the order  
+	client/DFSInputStream,   would connect to the closet one and start reading the blocks 
+	When the end of the block is reached, DFSInputStream will close the connection to the datanode, then find the best datanode for the next block
+	
+	
+	In case of Failures 
+		During reading, if the DFSInputStream encounters an error while communicating with a datanode, it will try the next closest one for that block. It will also remember datanodes that have failed so that it doesn’t needlessly retry them for later blocks
+		If a corrupted block is found, the DFSInputStream attempts to read a replica of the block from another datanode; it also reports the corrupted block to the namenode.
+	
+
+	
+	
+	
+------------------------------------------------------------------------------
+
+FSIMAGE AND EDIT LOGS 
+---------------------
+
+To view the FSIMAGE 
+
+sudo hdfs oiv -i /dfs/nn/current/fsimage_0000011 -o fsimage_output.txt
+
+fsimage is a binary file , by using this command text file will be created it has all the snapshot of the filesystem 
+
+ 
+sudo hdfs oev -i /dfs/nncurrent/edit_000000000 -o edit.xml 
+
+
+
+
+SCALA INTERFACE TO HDFS 
+-----------------------
+
+
+
+import org.apache.hadoop.fs._
+import org.apache.hadoop.conf._
+
+
+object hdfsFileService{
+
+val conf = new Configuration()
+val hdfsCoresitPath= new Path("coresitexml")
+val hdfsHdfsSitePath= new Path("hdfs site .xml")
+conf.set("fs.defaultFS", "hdfs://quickstart.cloudera:8020")
+conf.addResource(hdfsCoresitPath)
+conf.addResource(hdfsHdfsSitePath)
+
+val filesytsem = new FileSystem.get(conf)                     // Now New Filesystem has been created with the Proper configuration Files 
+
+
+
+val fs = FileSystem.get(sc.hadoopConfiguration)   // For Spark Configuration we can access all the method using this one it works well 
+
+
+// To delete the File 
+def removeFile(filename:String) = {
+	val path = new path(filename)
+	filesystem.remove(path,true)
+}
+
+
+// To create a Folder 
+def createFolder(filename:String) ={
+	val path = new Path(filename)
+	if(!filesystem.exists(path)){
+		filesystem.mkdirs(path)
+	 }
+}
+
+//open the File 
+
+def open(fileName:String) = {
+	val path = new Path(fileName)
+	filesystem.open(path)
+}
+
+//write File 
+
+
+
+
+}
+
+
+verify the Excel 

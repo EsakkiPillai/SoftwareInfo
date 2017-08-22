@@ -1,0 +1,676 @@
+
+
+10.9  Looping over a Collection with foreach 
+
+
+	For each Method Applies your Function to each end Every element in the Collection 
+	It doesnt return Anyvalue 
+	it is mostly used for "Side Effects" which is used to print something 
+	
+Example :
+
+var x = Vector(1,2,3,4)
+x:scala.collection.immutable.Vector[Int]
+
+x.foreach( (i:Int) => println(i) )  ===> x.foreach(  i => println(i) )  ===>  x.foreach(println(_))  ===> x.foreach(println)
+
+if a Function take a single value  also as of single line we can transform the function as below 
+	x.foreach(println(_))  ===> x.foreach(println)
+	
+As long as your function (or method) takes one parameter of the same type as the elements in the collection and returns nothing (Unit), it can be called from a foreach
+method. 
+
+Write a Sample Pgm Add Words to the Biffer if the Word ength is greater than 4 
+
+val inp ="Hello Welcome here "
+val longWords = new StringBuilder
+
+inp.foreach {
+
+	if(e.length > 4 ) longwords.appends(s "$e)
+	else println( e + " Is not added " )
+			}
+
+			
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10.10  Looping over a Collection with a for Loop
+
+A simple For Loop 
+	val fruits = List ("APPLE" , "Orange" , "Bananna" )
+	for ( e <- fruits ) println(e.toUpperCase)
+
+A Multi Line For Loop 
+	val fruits = List ("APPLE" , "Orange" , "Bananna" )
+	for ( e <- fruits ) {
+	val upper = e.toUpperCase() 
+	println("uppercase" + upper)
+	val lower = e.toLowercase()
+	println("Lower Case are " + lower)
+	}
+	
+
+Use Counter Inside the For Loop 
+
+	for (i <- 0 until fruits.length) println(s,"element $i is ${fruits(i)})
+	
+the Sample Example Can be wriiten as Follows:
+	for ( (ele, count) <- fruits.zipWithIndex) {                zipWithIndex will always return tuple as of (Apple  , 0 ) (Orange , 1) (bananna , 2)
+	println( s "element $count is $ele)
+	}
+	
+	
+we can change the Counter to start with 1 
+
+for ( (ele, count) <- fruits.zip(Stream from 1)) {
+println( s "element $count is $ele)
+}
+
+To build a new collection from an input collection, use the for/yield construct
+
+val fruits = List ("APPLE" , "Orange" , "Bananna" )
+val UpperFruits = fruits.for ( e <- fruits ) yield e.toUpperCase()
+UpperFruits: List[java.lang.String] = List(APPLE, BANANA, ORANGE)
+
+The for/yield construct returns (yields) a new collection from the input collection by applying your algorithm to the elements of the input collection, so the array newArray
+contains uppercase versions of the three strings in the initial array 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ 10.11 Using zipWithIndex or zip to Create Loop Counters
+	
+zipWithIndex is used on a sequence, it returns a sequence of Tuple2 elements,
+scala> val list = List("a", "b", "c")
+list: List[String] = List(a, b, c)
+scala> val zwi = list.zipWithIndex
+zwi: List[(String, Int)] = List((a,0), (b,1), (c,2))
+
+
+
+	val days = Array("Sunday", "Monday", "Tuesday", "Wednesday",  "Thursday", "Friday", "Saturday")
+	
+	days.zipWithIndex.foreach {
+		println(s"${d._2} is ${d._1}")
+
+	}
+	
+Note : this is the Second way of writing the Foreach with zipwithIndex method 
+
+We can also use a zip with stream to create a Counter 
+
+
+	val days = Array("Sunday", "Monday", "Tuesday", "Wednesday",  "Thursday", "Friday", "Saturday")
+	
+	for ( (e , count) <- days.zip(Stream from 1)) {
+	
+		println(s"Days of $count are $e)
+	}
+	
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10.12  Using Iterators 
+
+Usually We Dont Use Iterator in Scala since we have Methods Like Map and foreach which was used quite a lot 
+
+	An important part of using an iterator is knowing that it’s exhausted after you use it.
+	An iterator isn’t a collection; instead, it gives you a way to access the elements in a collection, one by one.
+
+ val it = Iterator(1,2,3)
+it: Iterator[Int] = non-empty iterator
+scala> it.foreach(println)
+
+if we call it again it will return the Empty 
+scala> it.foreach(println)
+(no output here)
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.13 Transforming One Collection to Another with for/yield 
+
+This combination of a for loop and yield statement is known as a for comprehension or sequence comprehension. It yields a new collection from an existing collection.
+
+If you’re new to using the for/yield construct, it can help to think that is has a bucket or temporary holding area on the side. 
+As each element from the original collection is operated on with yield and your algorithm, it’s added to that bucket. 
+Then, when the for loop is finished iterating over the entire collection, all of the elements in the bucket are returned (yielded) by the expression.
+
+In general, the collection type that’s returned by a for comprehension will be the same type that you begin with. 
+If you begin with an ArrayBuffer, you’ll end up with an ArrayBuffer:
+
+scala> val fruits = scala.collection.mutable.ArrayBuffer("apple", "banana")
+		fruits: scala.collection.mutable.ArrayBuffer[java.lang.String] =  ArrayBuffer(apple, banana)
+scala> val x = for (e <- fruits) yield e.toUpperCase
+			x: scala.collection.mutable.ArrayBuffer[java.lang.String] =   ArrayBuffer(APPLE, BANANA)
+
+ A List returns a List:
+
+scala> val fruits = "apple" :: "banana" :: "orange" :: Nil
+			fruits: List[java.lang.String] = List(apple, banana, orange)
+scala> val x = for (e <- fruits) yield e.toUpperCase
+			x: List[java.lang.String] = List(APPLE, BANANA, ORANGE)
+
+			
+			
+scala> val cars = Vector("Mercedes", "Porsche", "Tesla")
+cars: Vector[String] = Vector(Mercedes, Porsche, Tesla)
+10.13. Transforming One Collection to Another with for/yield | 281
+scala> for {
+ | c <- cars
+ | if c.startsWith("M")
+ | } yield c
+res0: Vector[String] = Vector(Mercedes)
+In fact, if none of the car names had matched the startsWith test, that code would
+return an empty Vector.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.14    Transforming One Collection to Another with map
+
+We are Using Map to transform one Collection to Other one 
+
+ val helpers = Vector("adam", "kim", "melissa")
+
+ helpers.map( x = > (x,x.lemgth))
+ helpers.map ( x => x.capitalize)
+ 
+ it can simplified as follows   helpers.map ( _.capitalize)
+ 
+  val elems = nieces.map(niece => <li>{niece}</li>)
+  
+  We can use functions instead of anonymous Function 
+  
+  def plusone( c :Char) : Char =  {  
+  
+  (c.toByte + 1).toChar
+  }
+
+
+		Hello.map(plusone)  this will Return IFMMP
+
+When writing a method to work with map, define the method to take a single parameter that’s the same type as the collection. 
+In this case, plusOne is defined to take a char, because a String is a collection of Char elements. 
+
+For instance, the previous  names.map(_.length) example showed that a function applied to a String can return an Int
+
+If we Use If statment Along with the Map 
+
+val fruits = List ("APPLE" , "Orange" , "Bananna" )     val 4length = for ( e <- fruits) { if e.length > 6 } yield e.toUppercase()
+
+val 4length_map = fruits.map ( x => if (x.length > 6 ) x.toUpperCase() ) 
+
+the Above Map will return us  newFruits: List[Any] = List(APPLE, (), LIME, (), ())   which is an improper result so we have to filter out the Empty results 
+
+4length_map.filter ( _ != ())
+res0: List[Any] = List(APPLE, LIME)
+
+So the Best way to Write the Above Code is 
+
+fruits.filter( _.length > 6).map(_.toUppercase )
+
+ List[String] = List(APPLE, LIME)
+
+ 
+ 
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 10.15    Flattening a List of Lists with flatten 
+ 
+ scala> val couples = List(List("kim", "al"), List("julia", "terry"))
+couples: List[List[String]] = List(List(kim, al), List(julia, terry))
+scala> val people = couples.flatten
+people: List[String] = List(kim, al, julia, terry)
+
+scala> val people = couples.flatten.map(_.capitalize).sorted
+people: List[String] = List(Al, Julia, Kim, Terry)
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.16  Combining map and flatten with flatMap
+
+
+Use flatMap in situations where you run map followed by flatten. The specific situation is this:
+
+  bag.map(toInt)
+res0: List[Option[Int]] = List(Some(1), Some(2), None, Some(4), None)
+ bag.map(toInt).flatten
+res1: List[Int] = List(1, 2, 4)
+		This makes finding the sum easy:
+scala> bag.map(toInt).flatten.sum
+res2: Int = 7
+
+
+ As shown in the previous recipe, flatten works very well with a list of Some and None elements. It extracts the values from the Some elements while discarding the None ele‐
+ments:
+ 
+  bag.flatMap(toInt).sum
+  
+ 
+ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 10.17  Using filter to Filter a Collection
+ 
+ To use filter on your collection, give it a predicate to filter the collection elements as desired
+ Your predicate should accept a parameter of the same type that the collection holds, evaluate that element, 
+ and return true to keep the element in the new collection, or false to filter it out 
+ 
+ 
+ filter doesn’t modify the collection it’s invoked on
+ 
+
+ Some Filter Methods 
+ 
+ collect, diff, distinct, drop, dropWhile, filter,  filterNot, find, foldLeft, foldRight, head, headOption, init, intersect, last,
+lastOption, reduceLeft, reduceRight, remove, slice, tail, take, takeWhile, and union.
+ 
+ 
+ 
+ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ 10.18  Extracting a Sequence of Elements from a Collection
+ 
+  drop, dropWhile, dropRight , take ,  takeWhile  , takeRight ,  slice , head, headOption, init, last, lastOption, , tail,  
+
+ val x = (1 to 10).toArray
+x.drop(3)           //  Array(4, 5, 6, 7, 8, 9, 10)
+x.dropWhile(_ < 6)  //  List(6, 7, 8, 9, 10)
+x.dropRight(4)      //  Array(1, 2, 3, 4, 5, 6)
+x.take(3)           // Array(1, 2, 3)
+x.takeWhile(_ < 5)  // Array(1, 2, 3, 4)
+x.takeRight(3)      //  Array(8, 9, 10)
+
+ val nums = (1 to 5).toArray
+ 
+nums.head // 1
+nums.headOption // Some(1)
+nums.init // Array(1, 2, 3, 4)
+nums.last // 5
+nums.lastOption // Some(5)
+nums.tail // Array(2, 3, 4, 5)
+
+The init method returns all elements from the sequence except for the last element. 
+The tail method returns all of the elements except the first one.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.19    Splitting Sequences into Subsets (groupBy, partition, etc 
+
+We wnat to Split the Collection into Subsets 
+
+GroupBy   Creates A Map 
+partition    span  splitAt  unzip   Will return Tuples
+
+val x = List(15, 10, 5, 8, 20, 12)
+
+x.groupBy(_.>12 )              // Map( true -> List (15,20) , false -> List(10,5,8,12)  )
+x.partition(_ > 12)            // ( List(15,20) , List(10,5,8,12))
+x.splitAt(3)                   // (List(15,10,5) , List(8,20,12))
+
+
+val listOfTuple2s = List((1,2), ('a', 'b'))
+ listOfTuple2s: List[(AnyVal, AnyVal)] = List((1,2), (a,b))
+
+ 
+ val x = listOfTuple2s.unzip
+  x: (List[AnyVal], List[AnyVal]) = (List(1, a),List(2, b))
+
+ 
+ scala> val women = List("Kim", "Julia")
+women: List[String] = List(Kim, Julia)
+scala> val men = List("Al", "Terry")
+men: List[String] = List(Al, Terry)
+scala> val couples = women zip men
+couples: List[(String, String)] = List((Kim,Al), (Julia,Terry))
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.20  Walking Through a Collection with the reduce and fold Methods
+
+
+You want to walk through all of the elements in a sequence, comparing two neighboring elements as you walk through the collection.
+
+a.reduceLeft( (x,y) => x max y )    => a.reduceLeft( _ max _)
+// returns the max of the two elements
+val findMax = (x: Int, y: Int) => {
+ val winner = x max y
+ println(s"compared $x to $y, $winner was larger")
+ winner
+}
+
+
+scala> a.reduceLeft(findMax)
+compared 12 to 6, 12 was larger
+compared 12 to 15, 15 was larger
+compared 15 to 2, 15 was larger
+compared 15 to 20, 20 was larger
+compared 20 to 9, 20 was larger
+res0: Int = 20
+
+ peeps.reduceLeft((x,y) => if (x.length > y.length) x else y)
+
+ 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10.21  Extracting Unique Elements from a Sequence
+
+The distinct method returns a new collection with the duplicate values removed. Remember to assign the result to a new variable. 
+This is required for both immutable and mutable collections.
+
+val x = Vector(1, 1, 2, 3, 3, 4)
+x: scala.collection.immutable.Vector[Int] = Vector(1, 1, 2, 3, 3, 4)
+
+scala> val y = x.distinct
+y: scala.collection.immutable.Vector[Int] = Vector(1, 2, 3, 4)
+
+
+In Other Ways 
+
+we can Use SET = > By Default Set has Unique Values 
+
+scala> val s = x.toSet
+s: scala.collection.immutable.Set[Int] = Set(1, 2, 3, 4)
+
+
+we will see the Distinct in Class object Later 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10.22  Merging Sequential Collections 
+
+ diff returns a set that contains the elements in the current set (this) that are not in the other set (that).
+
+
+I needed to find the elements in one list that weren’t in another list.
+
+val a = Array(1,2,3,11,4,12,4,5)
+val b = Array(6,7,4,5)
+
+val c = a.toset diff b.toset
+c: scala.collection.immutable.Set[Int] = Set(1, 2, 12, 3, 11)
+
+val d = b.toset diff a.toset 
+d :scala.collection.immutable.Set[Int] = Set(6,7)
+
+ val complement = c ++ d
+complement: scala.collection.immutable.Set[Int] = Set(1, 6, 2, 12, 7, 3, 11)
+
+
+scala> val i = a.intersect(b)
+i: Array[Int] = Array(4, 5)
+
+
+scala> val c = a.toSet -- i.toSet
+c: scala.collection.immutable.Set[Int] = Set(1, 2, 12, 3, 11)
+scala> val d = b.toSet -- i.toSet
+d: scala.collection.immutable.Set[Int] = Set(6, 7)
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.23  Merging Two Sequential Collections into Pairs with zip 
+
+You want to merge data from two sequential collections into a collection of key/value pairs.
+
+Zip 
+
+val women = LIst("Women1" ,"Women2")
+val men = List("Men1" ,"Men2")
+val couples = women zip men 
+	List ( ("women1" , "men1") ("women2" ,"men2") )
+
+val Couples_map = couples.toMap
+		scala.collections.immutable.Map[String, String] = Map (Women1 -> men1 , Women2 -> Men2)
+		
+If one collection contains more items than the other collection, the items at the end of the longer collection will be dropped.
+
+// three elements
+scala> val products = Array("breadsticks", "pizza", "soft drink")
+products: Array[String] = Array(breadsticks, pizza, soft drink)
+// one element
+scala> val prices = Array(4)
+prices: Array[Int] = Array(4)
+// one resulting element
+scala> val productsWithPrice = products.zip(prices)
+productsWithPrice: Array[(String, Int)] = Array((breadsticks,4))
+
+Note that the unzip method is the reverse of zip:
+scala> val (a,b) = productsWithPrice.unzip
+10.23. Merging Two Sequential Collections into Pairs with zip | 305
+a: collection.mutable.IndexedSeq[String] =
+ ArrayBuffer(breadsticks, pizza, soft drink)
+b: collection.mutable.IndexedSeq[Double] =
+ ArrayBuffer(4.0, 10.0, 1.5)
+
+ 
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ 10.24  Creating a Lazy View on a Collection
+ 
+ 
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  10.27  Tuples, for When You Just Need a Bag of Things
+  
+A tuple gives you a way to store a group of heterogeneous items in a container, which is useful in many situations
+
+val version = ("scala" , "2.10.6")
+
+we can also give a class Object as well 
+
+ val t = (3, "Three", new Person("Al"))
+t: (Int, java.lang.String, Person) = (3,Three,Person(Al))
+
+we can access the Tuples as Follows :- 
+scala> t._1
+res1: Int = 3
+scala> t._3
+res3: Person = Person(Al)
+
+
+we can directly assign the Values as well 
+
+scala> val(x, y, z) = (3, "Three", new Person("Al"))
+x: Int = 3
+y: String = Three
+z: Person = Person(Al)
+
+if we dont want all the elements we want some them 
+
+scala> val (x, _, z) = t
+x: Int = 3
+z: Person = Person(Al)
+
+
+String Value is not assigned 
+
+
+Tuples in Scala = > We are Hvaing 22 Different tuples 
+
+
+We can convert a Tuple in to a Collection   val version = ("scala" , "2.10.6") version.toArray
+
+we can use iterator mathod in the tuple as below , Keeep in mind that once the iterationis completed iterator is exhausted like others 
+
+ val x = ("AL" -> "Alabama")    // x: (java.lang.String, java.lang.String) = (AL,Alabama)          this will create a Tuple 
+ 
+  val it = x.productIterator    //  it: Iterator[Any] = non-empty iterator  
+  
+   for (e <- it) println(e)     //  AL
+									Alabama
+									
+If we Iterate it Agian we will get the Empty Output 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+10.28   Sorting a Collection 
+
+sorted        =>   sorted method can sort collections with type Double, Float, Int, and any other type that has an implicit scala.math.Ordering: 
+sortWith      =>   sortWith method lets you provide your own sorting function
+
+val a = List(10, 5, 8, 1, 7).sorted
+		a: List[Int] = List(1, 5, 7, 8, 10)
+
+val b = List("banana", "pear", "apple", "orange").sorted
+		b: List[String] = List(apple, banana, orange, pear)
+
+		
+List(10, 5, 8, 1, 7).sortWith(_ < _)
+		res1: List[Int] = List(1, 5, 7, 8, 10)
+scala> List(10, 5, 8, 1, 7).sortWith(_ > _)
+		res2: List[Int] = List(10, 8, 7, 5, 1)
+ List("banana", "pear", "apple", "orange").sortWith(_ < _)
+		res3: List[java.lang.String] = List(apple, banana, orange, pear)
+scala> List("banana", "pear", "apple", "orange").sortWith(_ > _)
+		res4: List[java.lang.String] = List(pear, orange, banana, apple)
+		
+scala> List("banana", "pear", "apple", "orange").sortWith(_.length > _.length)
+		res6: List[java.lang.String] = List(banana, orange, apple, pear)
+
+def sortByLength(s1: String, s2: String) = {
+ println("comparing %s and %s".format(s1, s2))
+ s1.length > s2.length
+}
+
+
+scala> List("banana", "pear", "apple").sortWith(sortByLength)
+comparing banana and pear
+comparing pear and apple
+comparing apple and pear
+comparing banana and apple
+res0: List[String] = List(banana, apple, pear)
+									
+
+ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+10.29   Converting a Collection to a String with mkString
+
+
+val a = Array("apple", "banana", "cherry")
+
+scala> a.mkString
+res1: String = applebananacherry
+
+scala> a.mkString(", ")
+res3: String = apple, banana, cherry
+
+scala> a.mkString("[", ", ", "]")     // a.mkString(   initial ,   body ,  end ) 
+res4: String = [apple, banana, cherry]
+
+
+ 
+
+ 
+ 
+ 
+ ==============================================================================================================================================================================================================================
+:: prepends a single item whereas ::: prepends a complete list. 
+So, if you put a List in front of :: it is taken as one item, which results in a nested structure.
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

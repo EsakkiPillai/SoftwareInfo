@@ -1,0 +1,172 @@
+1) hdfs dfs -cp /user/esakkipillai/Welcome.txt /user/esakkipillai/hdfscommand/Welcome.txt
+
+Usage: hdfs dfs -cp [-f] [-p | -p[topax]] URI [URI ...] <dest>
+The -f option will overwrite the destination if it already exists.
+The -p option will preserve file attributes [topx] (timestamps, ownership, permission, ACL, XAttr). 
+If -p is specified with no arg, then preserves timestamps, ownership, permission. If -pa is specified, 
+then preserves permission also because ACL is a super-set of permission. 
+Determination of whether raw namespace extended attributes are preserved is independent of the -p flag
+
+2 ) [esakkipillai@gw01 ~]$ hdfs dfs -setrep 5  /user/esakkipillai/hdfscommand/Welcome.txt
+	Replication 5 set: /user/esakkipillai/hdfscommand/Welcome.txt
+	
+3)   [esakkipillai@gw01 ~]$ hdfs dfs -ls /user/esakkipillai/hdfscommand/
+	Found 1 items
+	-rw-r--r--   5 esakkipillai hdfs         34 2017-06-05 07:54 /user/esakkipillai/hdfscommand/Welcome.txt	
+			check the replication Factor
+			
+			
+4 ) [esakkipillai@gw01 ~]$ hdfs dfs -du -h 
+			0   .Trash
+			0   .sparkStaging
+			34  Welcome.txt
+			0   datalake
+			34  hdfscommand
+Note : Displays sizes of files and directories contained in the given directory or the length of a file in case its just a file.
+
+Options:
+
+The -s option will result in an aggregate summary of file lengths being displayed, rather than the individual files.
+The -h option will format file sizes in a "human-readable" fashion (e.g 64.0m instead of 67108864)
+Example:
+
+hdfs dfs -du /user/hadoop/dir1 /user/hadoop/file1 hdfs://nn.example.com/user/hadoop/dir1
+Exit Code: Returns 0 on success and -1 on error.
+
+5 ) Append two Files and write it into HDFS 
+
+hdfs dfs -appendToFile /home/esakkipillai/Welcome.txt /home/esakkipillai/demo.txt  /user/esakkipillai/hdfscommand/appended.txt
+
+[esakkipillai@gw01 ~]$ hdfs dfs -cat /user/esakkipillai/hdfscommand/appended.txt
+Welcome to the Cloud Programming 
+A Cricket Match is going on Between AUS VS BAN 
+[esakkipillai@gw01 ~]$ 
+
+
+6) Change the Permission to the File 
+
+[esakkipillai@gw01 ~]$ hdfs dfs -ls /user/esakkipillai/hdfscommand/appended.txt
+-rw-r--r--   3 esakkipillai hdfs         82 2017-06-05 11:18 /user/esakkipillai/hdfscommand/appended.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -chmod 777 /user/esakkipillai/hdfscommand/appended.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -ls /user/esakkipillai/hdfscommand/appended.txt
+-rwxrwxrwx   3 esakkipillai hdfs         82 2017-06-05 11:18 /user/esakkipillai/hdfscommand/appended.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -chmod u+x /user/esakkipillai/hdfscommand/appended.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -ls /user/esakkipillai/hdfscommand/appended.txt
+-rwxrwxrwx   3 esakkipillai hdfs         82 2017-06-05 11:18 /user/esakkipillai/hdfscommand/appended.txt
+[esakkipillai@gw01 ~]$ 
+
+
+7) Create a Demo.txt File in the Local and Move it to HDFS also Download the appended.txt file to local 
+
+[esakkipillai@gw01 ~]$ hdfs dfs -put /home/esakkipillai/demo.txt /user/esakkipillai/hdfscommand/cpFromLocal.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -get /user/esakkipillai/hdfscommand/appended.txt /home/esakkipillai/cpToLocal.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -copyFromLocal /home/esakkipillai/demo.txt /user/esakkipillai/hdfscommand/cpFromLocalsrc.txt
+[esakkipillai@gw01 ~]$ hdfs dfs -copyToLocal /user/esakkipillai/hdfscommand/appended.txt /home/esakkipillai/cpToLocalsrc.txt
+[esakkipillai@gw01 ~]$ 
+
+copyFromLocal The -f option will overwrite the destination if it already exists.
+
+checking the Files in both HDFS and the local system 
+
+[esakkipillai@gw01 ~]$ hdfs dfs -ls /user/esakkipillai/hdfscommand/
+Found 4 items
+-rw-r--r--   5 esakkipillai hdfs         34 2017-06-05 07:54 /user/esakkipillai/hdfscommand/Welcome.txt
+-rwxrwxrwx   3 esakkipillai hdfs         82 2017-06-05 11:18 /user/esakkipillai/hdfscommand/appended.txt
+-rw-r--r--   3 esakkipillai hdfs         48 2017-06-05 11:25 /user/esakkipillai/hdfscommand/cpFromLocal.txt
+-rw-r--r--   3 esakkipillai hdfs         48 2017-06-05 11:27 /user/esakkipillai/hdfscommand/cpFromLocalsrc.txt
+[esakkipillai@gw01 ~]$ ls -lrt 
+total 20
+-rw-r--r-- 1 esakkipillai students 728 Jun  5 01:00 derby.log
+-rw-r--r-- 1 esakkipillai students  34 Jun  5 07:48 Welcome.txt
+-rw-r--r-- 1 esakkipillai students  48 Jun  5 11:16 demo.txt
+-rw-r--r-- 1 esakkipillai students  82 Jun  5 11:26 cpToLocal.txt
+-rw-r--r-- 1 esakkipillai students  82 Jun  5 11:27 cpToLocalsrc.txt
+[esakkipillai@gw01 ~]$ 
+
+
+8) use count Command 
+
+Usage: hdfs dfs -count [-q] [-h] <paths>
+
+Count the number of directories, files and bytes under the paths that match the specified file pattern. 
+The output columns with -count are: DIR_COUNT, FILE_COUNT, CONTENT_SIZE FILE_NAME
+
+The output columns with -count -q are: QUOTA, REMAINING_QUATA, SPACE_QUOTA, REMAINING_SPACE_QUOTA, DIR_COUNT, FILE_COUNT, CONTENT_SIZE, FILE_NAME
+
+The -h option shows sizes in human readable format
+[esakkipillai@gw01 ~]$ hdfs dfs -count /user/esakkipillai/hdfscommand
+           1            4                212 /user/esakkipillai/hdfscommand
+[esakkipillai@gw01 ~]$ hdfs dfs -count -q -h  /user/esakkipillai/hdfscommand
+        none             inf            none             inf            1            4                212 /user/esakkipillai/hdfscommand
+[esakkipillai@gw01 ~]$ 
+
+9) Display the Acess Control of the appended.txt File 
+
+[esakkipillai@gw01 ~]$ hdfs dfs -getfacl /user/esakkipillai/hdfscommand/appended.txt
+# file: /user/esakkipillai/hdfscommand/appended.txt
+# owner: esakkipillai
+# group: hdfs
+user::rwx
+group::rwx
+other::rwx
+
+
+
+10) Merge all the Files in the hdfscommand Folder ainto a merged.txt (local)
+
+[esakkipillai@gw01 ~]$ hdfs dfs -getmerge  /user/esakkipillai/hdfscommand merged.txt
+[esakkipillai@gw01 ~]$ ls
+cpToLocalsrc.txt  cpToLocal.txt  demo.txt  derby.log  merged.txt  Welcome.txt
+[esakkipillai@gw01 ~]$ 
+
+11) To check the Hadoop Version 
+	hadoop version 
+
+
+[esakkipillai@gw01 ~]$ hadoop fsck - /user/esakkipillai
+DEPRECATED: Use of this script to execute hdfs command is deprecated.
+Instead use the hdfs command for it.
+
+Connecting to namenode via http://nn01.itversity.com:50070/fsck?ugi=esakkipillai&path=%2Fuser%2Fesakkipillai
+FSCK started by esakkipillai (auth:SIMPLE) from /172.16.1.100 for path /user/esakkipillai at Mon Jun 05 12:16:10 EDT 2017
+......Status: HEALTHY
+ Total size:    246 B
+ Total dirs:    8
+ Total files:   6
+ Total symlinks:                0
+ Total blocks (validated):      5 (avg. block size 49 B)
+ Minimally replicated blocks:   5 (100.0 %)
+ Over-replicated blocks:        0 (0.0 %)
+ Under-replicated blocks:       0 (0.0 %)
+ Mis-replicated blocks:         0 (0.0 %)
+ Default replication factor:    3
+ Average block replication:     3.4
+ Corrupt blocks:                0
+ Missing replicas:              0 (0.0 %)
+ Number of data-nodes:          5
+ Number of racks:               1
+FSCK ended at Mon Jun 05 12:16:10 EDT 2017 in 1 milliseconds
+
+
+The filesystem under path '/user/esakkipillai' is HEALTHY
+[esakkipillai@gw01 ~]$
+
+---------------------------------------------------------------------------------
+
+
+Usage: hdfs dfs -test -[ezd] URI
+
+Options:
+
+The -e option will check to see if the file exists, returning 0 if true.
+The -z option will check to see if the file is zero length, returning 0 if true.
+The -d option will check to see if the path is directory, returning 0 if true.
+Example:
+
+hdfs dfs -test -e filename
+
+
+
+[esakkipillai@gw01 ~]$ hdfs dfs -checksum /user/esakkipillai/hdfscommand/appended.txt
+/user/esakkipillai/hdfscommand/appended.txt     MD5-of-0MD5-of-512CRC32C        000002000000000000000000dccd3ab3433492ac2653715bc7555e1f
+[esakkipillai@gw01 ~]$ 

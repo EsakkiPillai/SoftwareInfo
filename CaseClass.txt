@@ -1,0 +1,216 @@
+Case Class 
+
+case class Book(title: String, pages: Int)
+What is hidden behind this line of code?
+
+1) Class with 2 immutable fields
+2) Getters for the fields
+3) Constructor
+4) Useful methods (will talk about that later)
+
+case class is also a Class , which has case as a additional Modifier.Because of this we have some additional Benefit as listeed belo
+case class person( Fname :String )
+object person {
+ def setPrinter() = println("we have printer Access" )
+ }
+
+1) If we javap this class we have 2 objects one with person and another with person$ (object)
+2) By default case class parameters are val , so that we can use them as p.id , we can also change the parameters to var 
+3) case class will have default implementation to tostring hashcode copy equals method ,
+4) we can create the object of the case class without any new key word
+5) we can call the nethods available in the companion object of the case class val p = person.setPrinter()
+6) we can inherit the case class from another case class , in scala one case class to another case class is prohibited . We can extend a caseclass from another class, trait etc
+7) in 2.11 case class have no limitation to the parameters in previous version we have the limitation up to 22 paramaters 
+8) Case class and case objects are serializable. which means it implements the serializable.
+9) == you check that each value inside of the first one class equals to the value of the second one class
+
+case class Rectangle(length: Int = 0, width: Int = 0)
+ 
+object Rectangle {
+  def square(rectangle: Rectangle) = rectangle.length * rectangle.width
+}
+ 
+val r1 = Rectangle(5, 4)
+ 
+Rectangle.square(r1)
+
+* By default, Scala Compiler adds companion object with apply and unapply methods that’s why we don’t need new keyword to create instances of a case class
+
+the biggest advantage of case class is that they support pattern matching 
+
+
+class Person (firstName:String)  { // Class Definition 
+// Class body 
+}
+
+
+* A scala class can contain primary consutrucot or primary and Auxilary constructor 
+* A scala class can contain only one primary constructor and one or more Auxilary constructor 
+* primary constructor starts at the class definition and spans completed class body 
+
+class Person(firstName:String, middleName:String, lastName:String){
+      // Class body goes here
+	  
+}
+
+val p1 = new Person("First","","Last")
+
+Some People may have middle Name some dont we can solve the problem using Auxilarly Constructor
+
+class Person(firstName:String, middleName:String, lastName:String){
+      println("Statement 1")
+ 
+      def fullName() = firstName + middleName + lastName
+ 
+      println("Statement 2")
+}
+scala> var p1 = new Person("Ram","","Posa")
+Statement 1
+Statement 2
+p1: Person = Person@3eb81efb
+
+whenever we create the Object for the Class Only the Class Body statements will be executed because it became the Prmary Constructor . Methods inside the Class wont be executed
+** All the Statemnets will be part of the Primary Constructor 
+** Methods will not be part of the Primary Constructor 
+** If else while loop also be part of the Primary Constructor 
+** A method call will also be part of the Primary Constructor 
+
+*** “val” means value that is constant. “val” is used to define Immutable Fields or variables or attributes. Immutable fields means once we create we cannot modify them.
+*** “var” means variable that is NOT constant. “var” is used to define Mutable Fields or variables or attributes. Mutable fields means once we create, we can modify them.
+
+Getter Method  	public java.lang.String firstName();
+Setter Method   public void firstName_$eq(java.lang.String);
+Constructor     public person( java.lang.string);
+
+
+if we dont declare anything  at the time of class Creation it will treated as the constructor 
+class person (firstName :String) {}
+will be creating a Constructor alone public person (java.lang.String)
+
+
+Auxiliary Constructor is also know as Secondary Constructor. 
+A Scala class can contain zero or one or more Auxiliary Constructors
+ Auxiliary Constructors are used to provide Constructors Overloading.
+ 
+we define Auxiliary Constructor in Class body with def and this keyword 
+each Auxiliary Constructor should call the Previous defined Constructor . 
+It may call the Primary Constructor or the any other Auxiliary Constructor 
+ Like Methods, Auxiliary Constructors are defined by using “def” keyword.
+Like Method Overloading, All Auxiliary Constructors should use same name: “this”.
+Each Auxiliary Constructor must have a different signature i.e. Different Parameters list.
+Each Auxiliary Constructor must call a previously defined constructor: it may be either Primary Constructor or Auxiliary Constructors. This call should be first statement in that Constructor.
+One Auxiliary Constructor calls Primary Constructor or another Auxiliary constructors by using “this” name.
+ 
+ 
+ 
+ ========================================================================================================================================
+ Methods are Defined inside the Classes and Functions can be declared Any where . Functions wont Operate on Objects 
+ 
+ 
+ def abs (x:Double) = { 
+	if (x >0) x else -x
+ }
+ 
+ def is the Keyword  and it is followed by the function Name 
+ x is the input parameter and we declare x is an Double   in Java we write Double x in scala we wrie the quite Opposite 
+ in here we dont specify the return type because return type is inferred... values are returned to the function call 
+ in the aboe we didnt specify the Output data type since scala automatically infer the data type , as Double 
+ 
+ if we declare the Function in the recursive manner we need to specify the data type  explicitly
+ def fact(n:Int):Int ={
+	if(i <=1) 1 
+	else i*fact(i-1)
+	}
+	
+ if we dont give the equals in the Function it will be treated as the unit Function in here it will only excute the expression and returns nothing/ unit 
+ 
+  def border (s:String ) {
+ val border = "--" * s.length+"--"
+ println(border+ "|\n" + s + "|\n"
+ }
+ 
+ Named Default Arguments 
+ 
+ while Creating the Function if we declare the Arguments with Parameters it will take that as the default parameter 
+ 
+ def decorate (s: String , left:String ="[" ,right:String = "]") {
+		left+ s +right + 
+	}
+decorate("hello")             //[Hello]
+decorate("hello" , "@" ,"!")  //@Hello!
+decorate("Hello" , "$" )     // $Hello]	
+
+if we are not specifying the left or right parameter values default parameters value will get executed as above 
+
+named Arguments - while at the Time of Function call if we specify the values with the named Parameters we can call the Function irrespective of its position 
+
+decorate( right = "#" ,left="$" ,s="Hello" )    // $Hello#
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+ 

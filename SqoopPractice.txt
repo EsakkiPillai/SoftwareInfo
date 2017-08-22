@@ -1,0 +1,113 @@
+Description
+
+This is to test the knowledge about connecting to database and copy data to HDFS as well as Hive tables.
+Understand validating connectivity to MySQL
+Ability to run import table from MySQL to HDFS
+Create hive database and import data into hive tables.
+Documentation for reference - https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html7
+
+Problem : 01
+		List databases, list tables and validate that you can connect to database using Sqoop with JDBC URL.
+
+
+Problem : 02 
+
+		Import the Table to the HDFS using mySQL Delimiter store the File as Avora File and use 8 threads   -- check compression codec 
+		
+Problem : 03 
+
+		Import the Table in to HDFS using 
+			Tab as Field Delimiter and "###" as line Delimiter 
+			use textfile 
+			use snappy Codec
+			use 3 threads 
+			
+		Export Back the same Above File to MYSQL 
+			create a New Table_Export and Export it from HDFS to MYSQL 
+			check the Data and Count 
+			
+Problem : 04
+
+		Import the Table in to HDFS using
+			"$" as  Field Delimiter 
+			use columns and Where Clause 
+			run  one thread 
+			check the Count using Sqoop against Mysql 
+			
+		Export the Same Back to Hdfs 
+		
+Problem : 05 
+
+		Import the Null (String , Num , Date ) to HDFS  also the Value should have some special Character "$5"
+				
+		
+Problem : -06 		
+		
+		
+		Update the Mysql Table and Insert the Some rows 
+		
+			Import the Updated Columns to HDFS 
+			Import it Using the Upinsert Mode 
+			
+
+			
+problem 07 
+
+		Import the Updated REcords alone in to HDFS 
+		
+Problem : 08 
+
+	Create a Sqoop Job 
+	
+	
+Problem 09 
+
+Showcase a Sqop Merge Command 
+
+
+
+Use the Same Problem For USing Hive 
+
+
+Argument	Description
+--hive-home <dir>	Override $HIVE_HOME
+--hive-import	Import tables into Hive (Uses Hive’s default delimiters if none are set.)
+--hive-overwrite	Overwrite existing data in the Hive table.
+--create-hive-table	If set, then the job will fail if the target hive
+table exits. By default this property is false.
+--hive-table <table-name>	Sets the table name to use when importing to Hive.
+--hive-drop-import-delims	Drops \n, \r, and \01 from string fields when importing to Hive.
+--hive-delims-replacement	Replace \n, \r, and \01 from string fields with user defined string when importing to Hive.
+--hive-partition-key	Name of a hive field to partition are sharded on
+--hive-partition-value <v>	String-value that serves as partition key for this imported into hive in this job.
+--map-column-hive <map>	Override default mapping from SQL type to Hive type for configured columns.
+ 
+		
+
+		
+Problem 10 :
+	Import the Data From Mysql To Hive with Partitions 
+
+Problem 11 
+
+	Export Back the Partition Hive Table to Mysql 
+	
+
+Problem 12 
+
+Export the REsults to Mysql Table which has BLOB and CLOB Columns 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		

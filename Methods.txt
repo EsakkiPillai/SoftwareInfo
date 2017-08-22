@@ -1,0 +1,64 @@
+Filtering methods
+Methods that can be used to filter a collection include 
+collect  => 
+diff  
+distinct,
+drop,
+dropWhile, 
+filter,
+filterNot,
+find, 
+foldLeft, 
+foldRight, 
+head,
+headOption, 
+init,
+intersect, 
+last, 
+lastOption, 
+reduceLeft, 
+reduceRight,
+remove, 
+slice, 
+tail, 
+take, 
+takeWhile, 
+and union.
+
+
+Transformer methods
+Transformer methods take at least one input collection to create a new output col‐
+lection, typically using an algorithm you provide. They include 
+
++, ++, −, −−, diff,
+distinct, collect, flatMap, map, reverse, sortWith, takeWhile, zip, and
+zipWithIndex.
+
+
+10.3. Choosing a Collection Method to Solve a Problem | 255
+Grouping methods
+These methods let you take an existing collection and create multiple groups from
+that one collection. These methods include 
+
+groupBy, partition, sliding, span,splitAt, and unzip.
+
+Informational and mathematical methods
+These methods provide information about a collection, and include 
+
+canEqual,
+contains, containsSlice, count, endsWith, exists, find, forAll, hasDefiniteSize,
+indexOf, indexOfSlice, indexWhere, isDefinedAt, isEmpty,
+lastIndexOf, lastIndexOfSlice, lastIndexWhere, max, min, nonEmpty, product,
+segmentLength, size, startsWith, sum. The methods foldLeft, foldRight,
+reduceLeft, and reduceRight can also be used with a function you supply to obtain
+information about a collection.
+Others
+A few other methods are hard to categorize, including par, view, flatten,
+foreach, and mkString. par creates a parallel collection from an existing collection;
+view creates a lazy view on a collection (see Recipe 10.24); flatten converts a list
+of lists down to one list; foreach is like a for loop, letting you iterate over the
+elements in a collection; mkString lets you build a String from a collection.
+There are even more methods than those listed here. For instance, there’s a collection
+of to* methods that let you convert the current collection (a List, for example) to other
+collection types (Array, Buffer, Vector, etc.). Check the Scaladoc for your collection
+class to find more built-in methods.

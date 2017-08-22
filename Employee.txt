@@ -1,0 +1,228 @@
+Employee 
+
+	employee_id
+	first_name
+	last_name 
+	email
+	phone_number
+	hire_date
+	job_id
+	salary
+	commission_pct
+	manager_id
+	dapartment_id
+	
+	
+	
+class Employee ( val employee_id:String   ,
+                 val first_name:String    ,
+                 val last_name:String     ,
+                 val email:String        ,
+                 val phone_number:String  ,
+                 val hire_date:String     ,
+                 val job_id:Int           ,
+                 val salary:Double        ,
+                 val commission_pct:Double ,
+                 val manager_id:String     ,
+                 val department_id:String
+                 )
+
+val e1= new Employee("1532894" ,"Esakki","Pillai","Epillai@xyz.com","9500804123" ,"02022016",100,1500,3.5,"1228221","E0101STM") 
+val e2= new Employee("1532895" ,"EsClone","Pillai","EsClone@xyz.com","9500224123","02012016",100,145000,3.0,"1228221","E0101STM")
+val e3= new Employee("1532896" ,"Rocko","Sankar","Rocko@xyz.com","95002304123","03022016",101,14000,3.5,"1228221","E0101GTM") 
+val e4= new Employee("1532897" ,"Rocky","Sankar","Rocky@xyz.com","9500324123","07022016",100,150000,5.3,"1228221","E0101STM") 
+val e5= new Employee("1532898" ,"vasanth","kumar","vasanth@xyz.com","9320804123","02032017",101,90000,7.5,"1228221","E0101GTM") 
+val e6= new Employee("1532899" ,"Arun","kumar","Arun@xyz.com","9500803223","02021991",1101,234000,13.5,"1228221","E0101GTM") 
+val e7= new Employee("1532811" ,"Arun","Raja gopalan","Arun1@xyz.com","8500804123","02021992",101,23000,3.5,"1228221","E0101GTM") 
+val e8= new Employee("1532812" ,"Aruna","ezhil","Aruna@xyz.com","9500815423","02021994",100,45000,13.5,"1228221","E0101STM") 
+val e9= new Employee("1532814" ,"Bala","T","Bala@xyz.com","9500809973","02021980",100,45000,13.5,"1228221","E0101STM") 
+val e10= new Employee("1532814" ,"Bala Kumar","sekar","BalaKumar@xyz.com","9582804123","10012017",101,45000,0.5,"1228221","E0101GTM") 
+  
+val employeeObject = List (
+  new Employee("1532894" ,"Esakki","Pillai","Epillai@xyz.com","9500804123" ,"02022016",100,1500,3.5,"1228221","E0101STM") ,
+  new Employee("1532895" ,"EsClone","Pillai","EsClone@xyz.com","9500224123","02012016",100,145000,3.0,"1228221","E0101STM") ,
+  new Employee("1532896" ,"Rocko","Sankar","Rocko@xyz.com","95002304123","03022016",101,14000,3.5,"1228221","E0101GTM") ,
+  new Employee("1532897" ,"Rocky","Sankar","Rocky@xyz.com","9500324123","07022016",100,150000,5.3,"1228221","E0101STM") ,
+  new Employee("1532898" ,"vasanth","kumar","vasanth@xyz.com","9320804123","02032017",101,90000,7.5,"1228221","E0101GTM") ,
+  new Employee("1532899" ,"Arun","kumar","Arun@xyz.com","9500803223","02021991",1101,234000,13.5,"1228221","E0101GTM") ,
+  new Employee("1532811" ,"Arun","Raja gopalan","Arun1@xyz.com","8500804123","02021992",101,23000,3.5,"1228221","E0101GTM") ,
+  new Employee("1532812" ,"Aruna","ezhil","Aruna@xyz.com","9500815423","02021994",100,45000,13.5,"1228221","E0101STM") ,
+  new Employee("1532814" ,"Bala","T","Bala@xyz.com","9500809973","02021980",100,45000,13.5,"1228221","E0101STM") ,
+  new Employee("1532814" ,"Bala Kumar","sekar","BalaKumar@xyz.com","9582804123","10012017",101,45000,0.5,"1228221","E0101GTM") ,
+)		
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+val srcFile = Source.fromFile(fileName).getLines
+val nota = srcFile.filter( rec => rec.split("\t")(2)=="NOTA").map( x => ( x.split("\t)(0) , x.split("\t)(10).toInt ) ).groupBy( r => r._1).reduceByKey(_+_)
+nota.sortby(_._1)
+
+ex:01  Get all the distinct constituencies 
+	val results=scala.io.Source.fromFile("/home/esakkipillai/esak.txt").getLines.map(r => (r.split("\t")(1))).toSet
+	results.foreach(println)
+
+ex02: Get number of constituencies by state sorted in descending order by number of constituencies
+
+
+val results=scala.io.Source.fromFile("/home/esakkipillai/esak.txt").getLines.map ( rec => (rec.split("\t")(0) , rec.split("\t")(1) ) ).toSet
+val groupByState = results.toList.groupBy(rec => rec._1).map( rec => (rec._1 ,rec._2) )
+val countofConst =groupByState.map (rec => (rec._1 , rec._2.map(x => x._2).size))
+val finalResults = countofConst.toList.sortBy(x => ~(x._2))
+finalResults.foreach(println)
+
+
+		res8: scala.collection.immutable.Map[String,List[(String, String)]] = Map(Andhra Pradesh -> List((Andhra Pradesh,Anantapur), (Andhra Pradesh,Secundrabad)
+		
+val countofConst =groupByState.map (rec => (rec._1 , rec._2.map(x => x._2).size))
+val countofConst =groupByState.map { case (key, value) => (key, value.map(x => x._2).size) }
+											
+
+											
+Note : -- 
+val m = Map("a" -> 1, "b" -> 2)
+
+val incM = m map {case (key, value) => (key, value + 1)}
+
+
+
+====================================================================================================================================================================
+Exercise 3 – Get the number of seats for each party in each state – output should be state,bjp,inc,
+
+val results = scala.io.Source.fromFile("/home/esakkipillai/esak.txt").getLines.toSet
+val ex3data = results.map ( rec => ((rec.split("\t")(0), rec.split("\t")(6)), rec.split("\t")(13)))
+val groupBystate = ex3data.groupBy( x => x._1)
+val res = groupBystate.map { case (key,value) => ( key , value.map( rec => rec._2.toInt).reduce(_+_)) }
+val res = groupBystate.map { case (key,value) => ( key , value.map( rec => rec._2.size) ) }
+
+
+=================================================================================================================================================================================================
+
+
+Exercise 4 – Get the percentage of polled votes of each party – formulla 
+
+(number of votes per party across all the constituencies / total number of votes all the constituencies)
+
+val results = scala.io.Source.fromFile("/home/esakkipillai/esak.txt").getLines.toSet
+val ex4data = results.map(rec => ( (rec.split("\t")(0) ,rec.split("\t")(1) , rec.split("\t")(6) ), rec.split("\t")(10).toDouble , rec.split("\t")(13).toDouble )).toList
+val groupByData = ex4data.groupBy(x => x._1)
+val res = groupByData.map { case (key, value) => ( key , value.map( x => x._2).reduce(_+_) , value.map( x => x._3).reduce(_+_) ) }
+import scala.collection.mutable.ListBuffer
+var listBuffer = new ListBuffer[String]()
+res.map( x => listBuffer += (x._1 + "," + x._2.size/x._3.size))	
+val z = listBuffer.toList
+z.foreach(println)
+
+List[((String, String, String), String, String)] = List(((Assam,Jorhat,AGP),46626,1189486), ((Andhra Pradesh,Warangal,TRS),661639,1537778),
+
+val groupByData = ex4data.groupBy(x => x._1)
+
+scala.collection.immutable.Map[(String, String, String),List[((String, String, String), String, String)]] = 
+		Map((Andhra Pradesh,"Peddapalle ",BCUF) -> List(((Andhra Pradesh,"Peddapalle ",BCUF),2245,1425355)), (Andhra Pradesh,Narasaraopet,NOTA) -> List(((Andhra Pradesh,Narasaraopet,NOTA),5985,1514861)),
+
+val res = groupByData.map { case (key, value) => ( key , value.map( x => x._2).reduce(_+_) , value.map( x => x._3).reduce(_+_) ) }
+		res: scala.collection.immutable.Iterable[((String, String, String), String, String)] = List(((Andhra Pradesh,"Peddapalle ",BCUF),2245,1425355), ((Andhra Pradesh,Narasaraopet,NOTA),5985,1514861),
+var listBuffer = new ListBufferString
+res.foreach( x => listBuffer += x.1 + "," + x.2/x._3)	
+val z = listBuffer.toList
+z.foreach(println)
+		
+		
+================================================================================================================================================================================================
+
+
+
+
+Exercise 5 – Get top 10 candidates by margin (number of votes for winner – number of votes for 1st runner)
+
+==============================================================================================================================================================
+Products.csv contains 
+storeID,productCategory,Product Id,Product_Price
+100,Diary,1001,5.00
+100,Diary,1002,1.50
+100,Diary,1003,2.50
+100,Diary,1004,0.75
+100,Diary,1005,6.50
+100,Diary,1006,6.50
+100,Diary,1007,20.25
+100,Diary,1008,50.00
+100,Diary,1009,10.00
+100,Diary,1010,1.50
+101,Diary,101,2.50
+101,Diary,102,15.00
+101,Diary,103,12.50
+101,Diary,104,3.00
+101,Diary,105,16.50
+101,Diary,106,31.00
+101,Diary,107,7.80
+101,Diary,108,45.00
+101,Diary,109,9.95
+101,Diary,110,1.25
+100,Meat,2001,15.00
+100,Meat,2002,25.00
+100,Meat,2003,25.00
+100,Meat,2004,13.00
+100,Meat,2005,9.00
+100,Meat,2006,26.00
+100,Meat,2007,12.00
+100,Meat,2008,13.00
+100,Meat,2009,75.00
+100,Meat,2010,15.00
+101,Meat,201,14.00
+101,Meat,202,23.00
+101,Meat,203,21.00
+101,Meat,204,13.00
+101,Meat,205,10.00
+101,Meat,206,25.00
+101,Meat,207,11.00
+101,Meat,208,13.00
+101,Meat,209,80.00
+101,Meat,210,1.25
+
+1) Find the maximum / Minimum priced product
+2) Find the maximum / Minimum priced product at the category Name level
+3) Find the maximum / Minimum priced product at the category Name level and Store Level
+4) Find the top 5 priced products
+5) Find the Top 3 Priced Products based on Store Only
+6) Find the Top 3 Priced Products based on Store and Category Only
+
+
+val srcFile = scala.io.Source.fromFile("/home/esakkipillai/products.csv").getLines.toList
+val maximum_overall_product = srcFile.map( rec => rec.split(",")(3).toDouble).reduce( (x,y) => x max y )
+val minimum_overall_product = srcFile.map( rec => rec.split(",")(3).toDouble).reduce( (x,y) => x min y )
+
+val srcFile = scala.io.Source.fromFile("/home/esakkipillai/products.csv").getLines.toList
+val max_product = srcFile.map( rec => (rec.split(",")(1) , rec.split(",")(3).toDouble) ).groupBy( x => x._1).map { case(key,value) => ( key , value.map( x=> x._2).reduce( (x,y) => x max y) ) }
+val min_product = srcFile.map( rec => (rec.split(",")(1) , rec.split(",")(3).toDouble) ).groupBy( x => x._1).map { case(key,value) => ( key , value.map( x=> x._2).reduce( (x,y) => x min y) ) }
+
+val srcFile = scala.io.Source.fromFile("/home/esakkipillai/products.csv").getLines.toList
+val max_prductStore = srcFile.map( rec => ( (rec.split(",")(0) ,rec.split(",")(1)),rec.split(",")(3).toDouble)).groupBy(x => x._1).map { case(key,value) => (key,value.map(x => x._2).reduce((x,y) => x max y ))}
+val min_prductStore = srcFile.map( rec => ( (rec.split(",")(0) ,rec.split(",")(1)),rec.split(",")(3).toDouble)).groupBy(x => x._1).map { case(key,value) => (key,value.map(x => x._2).reduce((x,y) => x min y ))}
+
+val srcFile = scala.io.Source.fromFile("/home/esakkipillai/products.csv").getLines.toList
+val top5_asc = srcFile.map(rec => ( rec.split(",")(2) ,rec.split(",")(3).toDouble) ).sortBy(_._2)
+val top5_dsc = srcFile.map( rec => (rec.split(",")(2) , rec.split(",")(3).toDouble)).sortBy(-_._2).take(5)
+
+val srcFile = scala.io.Source.fromFile("/home/esakkipillai/products.csv").getLines.toList
+val top3_store = srcFile.map(rec => (rec.split(",")(0) , rec.split(",")(3).toDouble)).groupBy(x => x._1).map{ case(key,value) => (key,value.map(x => x._2) ) }.toList.sortBy(_._2._1).take(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

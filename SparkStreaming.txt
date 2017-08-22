@@ -1,0 +1,80 @@
+Spark Streaming 
+
+	Provides a Way to Consume Continual Streams of Data 
+	scalable ,high throughput , fault tolerant 
+	Built on top of spark core 
+	Supports TCP kafka Flume HDFS S3 
+	Currrently it produces Kind of RDD 
+	
+	
+input Stream of Data ==> Spark Streaming = = = => Spark Core ===> Batches of Processed Data 
+
+Spark Streaming basically splits into the batches of RDD incoming stream is buffered in to RDDS and 
+these RDDs are 	handed to Spark Core over and Over for Processing 
+Spark Streaming uses "micro Batch" Architecture 
+New batches are created based at regular time intervals called batch intervals 
+Size of the time interval is determined by the parameter called"BATCH INTERVAL" at the time when we create Spark Streaming 
+usually it will be 500 miiliseconds to few Seconds ..... 
+
+spark Streaming is build on an abstraction called DSTREAM (Discretized Stream)
+DSTREAM is  a Sequence od data arriving over time 
+
+we can loss the DSTREAM over the period of time.
+
+DSTREAM is created from the Streaming Context per JVM  , we can create multiple DSTREAM for a singe Streaming Context 
+
+RDD - RESILIENT DISTRIBUTED DATASET -> it has PARTITIONS 
+
+IN DSTREAM there are actually 2 intervals 
+	batch interval  => New RDD is created on every batch interval 
+	block interval   => Data that comes in during the batch interval is broken into blocks , one block per block interval which is 200ms 
+	
+	every block is transferred into Partition 
+	
+	RDD => Casandra => 100 Thousands rows per Partition 
+			HDFS    => Each HDFS Block becomes the Partititon 
+ 
+ 
+ 
+we have to Stop the Spark Context And then we need to start the Streaming Context 
+
+scala> import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.StreamingContext
+
+scala> import org.apache.spark.SparkConf
+import org.apache.spark.SparkConf
+
+scala> val conf =  new SparkConf().setAppName("Streaming First Appln")
+conf: org.apache.spark.SparkConf = org.apache.spark.SparkConf@2c952e6
+
+scala> val ssc = new StreamingContext(conf, org.apache.spark.streaming.Seconds(60))
+ssc: org.apache.spark.streaming.StreamingContext = org.apache.spark.streaming.StreamingContext@50da96f3
+
+it will start the Streaming upto 60 sec , it will queue upto 60 sec and it will process the data based on it 
+
+Like A netcat in SPark Streaming we have a method 
+	socketTextStream
+	
+	scala> val lines = ssc.socketTextStream("gw01.itversity.com",44444)
+lines: org.apache.spark.streaming.dstream.ReceiverInputDStream[String] = org.apache.spark.streaming.dstream.SocketInputDStream@797ec046
+
+Discrete Stream Of Collection 
+
+scala> ssc.start()  to start the Streaming 
+
+
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.SparkConf
+val conf =  new SparkConf().setAppName("Streaming First Appln")
+val ssc = new StreamingContext(conf, org.apache.spark.streaming.Seconds(60))
+val lines = ssc.socketTextStream("gw01.itversity.com",44444)
+lines.flatMap( rec = > rec.split(" ")).map( x => (x,1) ). reduceByKey(_+_).print
+ssc.start()
+
+libraryDependencies += "org.apache.spark" % "spark-streaming_2.10" % "1.6.0"
+For ingesting data from sources like Kafka, Flume, and Kinesis that are not present in the Spark Streaming core API, 
+
+you will have to add the corresponding artifact spark-streaming-xyz_2.10 to the dependencies.
+Kafka	spark-streaming-kafka_2.10
+Flume	spark-streaming-flume_2.10
+Twitter	spark-streaming-twitter_2.10

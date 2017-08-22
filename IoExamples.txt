@@ -1,0 +1,124 @@
+
+import Scala.io.Source
+
+val stream :IputStream = getClass.getResourceAsStream("/readme.txt")
+val inp = scala.io.Source.fromInputStream(stream).getLines
+inp.foreach(println)
+
+val stream :InputStream = getClass.getResourceAsStream("readme.txt")
+val path = stream.getPath
+println(path)
+
+import java.io.file
+val stream:InputPath = getClass.getResourceAsStream("readme.txt")
+val folder = new File(stream.getPath)
+if( folder.exists && folder.isDirectory)
+	folder.listFiles.toList.foreach( x => println(x.getName))
+
+
+For Working With Files 
+libraryDependencies += "com.github.pathikrit" %% "better-files" % "2.16.0"
+
+
+---------------------------------------------------------------------------------------------------------------
+
+Reading a File 
+
+scala> src.split("\\s+")
+res8: Array[String] = Array(JournalDev, is, a, great, platform, for, Java, Developers., JournalDev, is, online, log, of, Pankaj, Kumar.)
+
+scala> src.split("\\s+").groupBy (x=>x)
+res7: scala.collection.immutable.Map[String,Array[String]] = Map(for -> Array(for), is -> Array(is, is), Kumar. -> Array(Kumar.), Pankaj -> Array(Pankaj), online -> Array(online), a -> Array(a), Developers. -> Array(Developers.), JournalDev -> Array(JournalDev, JournalDev), platform -> Array(platform), Java -> Array(Java), great -> Array(great), of -> Array(of), log -> Array(log))
+
+scala> src.split("\\s+").groupBy (x=>x).mapValues( x => (x,x.length))
+res9: scala.collection.immutable.Map[String,(Array[String], Int)] = Map(for -> (Array(for),1), is -> (Array(is, is),2), Kumar. -> (Array(Kumar.),1), Pankaj -> (Array(Pankaj),1), online -> (Array(online),1), a -> (Array(a),1), Developers. -> (Array(Developers.),1), JournalDev -> (Array(JournalDev, JournalDev),2), platform -> (Array(platform),1), Java -> (Array(Java),1), great -> (Array(great),1), of -> (Array(of),1), log -> (Array(log),1))	
+
+import scala.io.Source._
+
+val src = Source.fromFile("/home/esakkipillai/data.txt")            // Non Empty Iterator 
+val src = Source.fromFile("/home/esakkipillai/data.txt").mkString   // Return as String
+src.split("//s+").groupBy( x=>x ).mapValues( x =>  x.length)
+
+
+writing to a File 
+val writer = new PrintWriter(new File("/home/esakkipillai/scala_examples/Dataer.txt"))
+writer.write("Hello ..Guys ")
+writer.close()
+Source.fromFile("/home/esakkipillai/scala_examples/Dataer.txt").foreach(print)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Acess Modifiers 
+
+By Default Access Modifier is Public by default 
+
+
+Modifier	Class	Package	Subclass	Every class
+public	    Yes		 Yes		Yes			Yes
+protected	Yes		 No			Yes			No
+private		Yes		 No			No			No
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Exception Handling 
+
+Scala Doesnt support the Checked Exception 
+	1) Throwing an Exception  ===> throws new Airthmetic Exception 
+	2) Try Catch Blocks ====> try { 
+									val a = 4/0
+								 } catch {
+										case ex: Arithmentic Exception => println (" We are getting the Airthemetic Exception")
+										case _ => Println("We got some Exception ")
+										}
+										
+=============================================================================================================================================================
+Collections 
+
+
+
+List 
+-----
+
+1) Find the max and Min values from the List 
+		a) Use predefined Method 
+		B) Use normal for loop 
+		
+2) we have a List of Person object and we need to display with the title name age  ( Mr Esak 12 Ms rai 12 )  
+		the person object looks as below Class Person( name , sex  , age ) and 
+		
+3)  // Check how to implict ordering for a custom class ?
+
+4) Write a Custom Logic for Sorting ?
+
+5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

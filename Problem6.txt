@@ -1,0 +1,29 @@
+Problem 6:
+
+****create a hive meta store database named problem6 and import all tables from mysql retail_db database into hive meta store
+****On spark shell use data available on meta store as source and perform step 3,4,5 and 6. [this proves your ability to use meta store as a source] 
+
+**** Rank products within department by price and order by department ascending and rank descending 
+		[this proves you can produce ranked and sorted data on joined data sets]
+
+
+
+
+
+
+
+
+
+
+sqoop import-all --connect jdbc:mysql://nn01.itversity.com:3306/retail_db --username retail_dba --password itversity 
+--warehouse-dir /user/hive/warehoues/problems6.db
+--hive-import 
+--hive-database problems6
+--create-hive-table
+--as-textfile
+
+
+***3
+
+  
+  

@@ -1,0 +1,255 @@
+Spark SQL 
+
+scala> val sparksql = new org.apache.spark.sql.SQLContext(sc)
+sparksql: org.apache.spark.sql.SQLContext = org.apache.spark.sql.SQLContext@78168463
+
+scala> val cars = sparksql.read.json("/user/esakkipillai/sparkdata.json")
+cars: org.apache.spark.sql.DataFrame = [itemNo: bigint, name: string, speed: bigint, weight: bigint]
+
+scala> cars.
+agg                    alias                  apply                  as                     asInstanceOf           cache                  coalesce               
+col                    collect                collectAsList          columns                count                  createJDBCTable        cube                   
+describe               distinct               drop                   dropDuplicates         dtypes                 except                 explain                
+explode                filter                 first                  flatMap                foreach                foreachPartition       groupBy                
+head                   inputFiles             insertInto             insertIntoJDBC         intersect              isInstanceOf           isLocal                
+javaRDD                join                   limit                  map                    mapPartitions          na                     orderBy                
+persist                printSchema            queryExecution         randomSplit            rdd                    registerTempTable      repartition            
+rollup                 sample                 save                   saveAsParquetFile      saveAsTable            schema                 select                 
+selectExpr             show                   sort                   sortWithinPartitions   sqlContext             stat                   take                   
+takeAsList             toDF                   toJSON                 toJavaRDD              toSchemaRDD            toString               transform              
+unionAll               unpersist              where                  withColumn             withColumnRenamed      write 
+
+
+scala> cars.printSchema
+root
+ |-- itemNo: long (nullable = true)
+ |-- name: string (nullable = true)
+ |-- speed: long (nullable = true)
+ |-- weight: long (nullable = true)
+
+ scala> cars.show
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     1|    Ferrari|  259|   800|
+|     2|     Jaguar|  274|   998|
+|     3|   Mercedes|  340|  1800|
+|     4|       Audi|  345|   875|
+|     5|Lamborghini|  355|  1490|
++------+-----------+-----+------+
+
+scala> cars.take(2)
+res5: Array[org.apache.spark.sql.Row] = Array([1,Ferrari,259,800], [2,Jaguar,274,998])
+
+scala> cars.take(2).foreach(println)
+[1,Ferrari,259,800]
+[2,Jaguar,274,998]
+
+scala> cars.takeAsList(4)
+res12: java.util.List[org.apache.spark.sql.Row] = [[1,Ferrari,259,800], [2,Jaguar,274,998], [3,Mercedes,340,1800], [4,Audi,345,875]]
+
+scala> cars.take(4)
+res13: Array[org.apache.spark.sql.Row] = Array([1,Ferrari,259,800], [2,Jaguar,274,998], [3,Mercedes,340,1800], [4,Audi,345,875])
+
+scala> cars.count
+res16: Long = 5
+
+scala> cars.groupBy("speed").count.show()
++-----+-----+                                                                   
+|speed|count|
++-----+-----+
+|  259|    1|
+|  274|    1|
+|  340|    1|
+|  345|    1|
+|  355|    1|
++-----+-----+
+
+
+scala> cars.head(2)
+res23: Array[org.apache.spark.sql.Row] = Array([1,Ferrari,259,800], [2,Jaguar,274,998])
+
+scala> cars.head()
+res24: org.apache.spark.sql.Row = [1,Ferrari,259,800]
+
+scala> cars.head(2).foreach(println)
+[1,Ferrari,259,800]
+[2,Jaguar,274,998]
+
+scala> cars.first()
+res31: org.apache.spark.sql.Row = [1,Ferrari,259,800]
+
+
+scala> val firstResult = cars.first()
+firstResult: org.apache.spark.sql.Row = [1,Ferrari,259,800]
+
+scala> firstResult.mkString(",")
+res33: String = 1,Ferrari,259,800
+
+scala> println("First Record " + firstResult.mkString(","))
+First Record 1,Ferrari,259,800
+
+
+scala> cars.collect()
+res35: Array[org.apache.spark.sql.Row] = Array([1,Ferrari,259,800], [2,Jaguar,274,998], [3,Mercedes,340,1800], [4,Audi,345,875], [5,Lamborghini,355,1490])
+
+scala> cars.collect().foreach(println)
+[1,Ferrari,259,800]
+[2,Jaguar,274,998]
+[3,Mercedes,340,1800]
+[4,Audi,345,875]
+[5,Lamborghini,355,1490]
+
+scala> cars.columns
+res50: Array[String] = Array(itemNo, name, speed, weight)
+
+scala> cars.dtypes
+res44: Array[(String, String)] = Array((itemNo,LongType), (name,StringType), (speed,LongType), (weight,LongType))
+
+scala> cars.dtypes.foreach(println)
+(itemNo,LongType)
+(name,StringType)
+(speed,LongType)
+(weight,LongType)
+
+
+val fastestcars = cars.filter(cars("speed") > 300 )
+fastestcars: org.apache.spark.sql.DataFrame = [itemNo: bigint, name: string, speed: bigint, weight: bigint]
+
+scala> fastestcars.cache().show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     3|   Mercedes|  340|  1800|
+|     4|       Audi|  345|   875|
+|     5|Lamborghini|  355|  1490|
++------+-----------+-----+------+
+
+scala> cars.orderBy(cars("weight").asc ).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     1|    Ferrari|  259|   800|
+|     4|       Audi|  345|   875|
+|     2|     Jaguar|  274|   998|
+|     5|Lamborghini|  355|  1490|
+|     3|   Mercedes|  340|  1800|
++------+-----------+-----+------+
+
+
+scala> cars.orderBy(cars("weight").desc ).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     3|   Mercedes|  340|  1800|
+|     5|Lamborghini|  355|  1490|
+|     2|     Jaguar|  274|   998|
+|     4|       Audi|  345|   875|
+|     1|    Ferrari|  259|   800|
++------+-----------+-----+------+
+
+scala> cars.sort($"weight".desc).show()   scala> cars.sort(cars("speed").desc).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     3|   Mercedes|  340|  1800|
+|     5|Lamborghini|  355|  1490|
+|     2|     Jaguar|  274|   998|
+|     4|       Audi|  345|   875|
+|     1|    Ferrari|  259|   800|
++------+-----------+-----+------+
+scala> cars.sort(cars("speed").desc).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     5|Lamborghini|  355|  1490|
+|     4|       Audi|  345|   875|
+|     3|   Mercedes|  340|  1800|
+|     2|     Jaguar|  274|   998|
+|     1|    Ferrari|  259|   800|
++------+-----------+-----+------+
+
+
+scala> cars.groupBy("speed").count().show
+
+scala> cars.drop(cars("speed")).show()
++------+-----------+------+
+|itemNo|       name|weight|
++------+-----------+------+
+|     1|    Ferrari|   800|
+|     2|     Jaguar|   998|
+|     3|   Mercedes|  1800|
+|     4|       Audi|   875|
+|     5|Lamborghini|  1490|
++------+-----------+------+
+
+scala> cars.select(max($"speed").as("superspeed")).show
++----------+
+|superspeed|
++----------+
+|       355|
++----------+
+
+scala> cars.select("speed","weight").show
++-----+------+
+|speed|weight|
++-----+------+
+|  259|   800|
+|  274|   998|
+|  340|  1800|
+|  345|   875|
+|  355|  1490|
++-----+------+
+
+
+scala> cars.where($"speed" > 340 ).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     4|       Audi|  345|   875|
+|     5|Lamborghini|  355|  1490|
++------+-----------+-----+------+
+
+scala> cars.limit(2).show
++------+-------+-----+------+
+|itemNo|   name|speed|weight|
++------+-------+-----+------+
+|     1|Ferrari|  259|   800|
+|     2| Jaguar|  274|   998|
++------+-------+-----+------+
+
+scala> cars.unionAll(fastestcars).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     1|    Ferrari|  259|   800|
+|     2|     Jaguar|  274|   998|
+|     3|   Mercedes|  340|  1800|
+|     4|       Audi|  345|   875|
+|     5|Lamborghini|  355|  1490|
+|     3|   Mercedes|  340|  1800|
+|     4|       Audi|  345|   875|
+|     5|Lamborghini|  355|  1490|
++------+-----------+-----+------+
+
+scala> cars.intersect(fastestcars).show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     5|Lamborghini|  355|  1490|
+|     4|       Audi|  345|   875|
+|     3|   Mercedes|  340|  1800|
++------+-----------+-----+------+
+
+scala> carsdup.dropDuplicates().show()
++------+-----------+-----+------+
+|itemNo|       name|speed|weight|
++------+-----------+-----+------+
+|     3|   Mercedes|  340|  1800|
+|     2|     Jaguar|  274|   998|
+|     5|Lamborghini|  355|  1490|
+|     1|    Ferrari|  259|   800|
+|     4|       Audi|  345|   875|
++------+-----------+-----+------+
+
+

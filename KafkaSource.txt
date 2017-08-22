@@ -1,0 +1,32 @@
+# this demo is for kafka Flume 
+#
+# Describe the Agent 
+a1.sources=kafkasource
+a1.sinks=hdfssink
+a1.channels=hdfschannel
+# Kafka Source 
+a1.sources.kafkasource.type=org.apache.flume.source.kafka.KafkaSource
+a1.sources.kafkasource.zookeeperConnect=nn01.itversity.com:2181
+a1.sources.kafkasource.topic=ek_ex02
+a1.sources.kafkasource.groupid=flume
+a1.sources.kafkasource.interceptors = i1
+a1.sources.kafkasource.interceptors.i1.type = timestamp
+a1.sources.kafkasource.kafka.consumer.timeout.ms = 100
+
+# Channel 
+a1.channels.hdfschannel.type = memory
+a1.channels.hdfschannel.capacity = 10000
+a1.channels.hdfschannel.transactionCapacity = 1000
+
+#Describe the hdfs sink 
+a1.sinks.hdfssink.type = hdfs
+a1.sinks.hdfssink.hdfs.path =/user/esakkipillai/flumeKafka/%{topic}/%y-%m-%d
+a1.sinks.hdfssink.hdfs.rollInterval = 120
+a1.sinks.hdfssink.hdfs.rollSize = 0
+a1.sinks.hdfssink.hdfs.rollCount = 0
+a1.sinks.hdfssink.hdfs.fileType = DataStream
+
+
+#Combine the sources 
+a1.sources.kafkasource.channels=hdfschannel
+a1.sinks.hdfssink.channel = hdfschannel

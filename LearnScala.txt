@@ -1,0 +1,27 @@
+Learn Scala
+
+(math.random*100).toInt
+res2: Int = 54
+
+
+val c = {
+     val i = (math.random*100).toInt
+     val j = (math.random*100).toInt
+     }
+
+	 
+Always Last value Will be returned 
+
+val c = {
+     val i = (math.random*100).toInt
+     val j = (math.random*100).toInt
+	 "Hello World"
+     }
+	c =HelloWorld 
+	
+	for(e <- 0 to a -1) {
+      res = pre + curr
+      println(res)
+      pre = curr
+      curr = pre
+      }

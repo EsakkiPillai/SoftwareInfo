@@ -1,0 +1,60 @@
+Pillai, Esakki Thangappahi ji 
+
+
+9:49 PMViswanathan, Rajasekarhi
+
+
+9:50 PMPillai, Esakki Thangapparun is almost going to complete ..
+
+meanwhile i check  for some counts in db 
+
+it shows zero 
+
+
+
+select count from rtl_companies    --295
+select count from rtl_currency     --267
+select count from rtl_ccy_exch_rate -- 68353
+select count from retail_provision  -- 0
+select count from rtl_t_cdr         --0
+
+
+9:50 PMViswanathan, Rajasekarfile data is there?
+
+
+9:51 PMPillai, Esakki Thangappain CTRL M jobs are not Failed ...
+
+but still data available in the staging folder
+
+
+9:52 PMViswanathan, Rajasekarcheck the file
+file is there in the success path or failure path
+?
+
+
+9:53 PMPillai, Esakki Thangappathere are no files in Success 
+as well as failure
+
+
+9:53 PMViswanathan, Rajasekarhmm
+one min
+
+
+9:53 PMPillai, Esakki Thangappaokay ji 
+
+
+9:54 PMViswanathan, Rajasekarhave u copied all the files
+I could see it in file folder?
+it shows success 
+
+
+9:56 PMPillai, Esakki Thangappaji i have copied all the files from this  : /u02/app/ret_test1/BCRS_REL3  to staging ji 
+
+
+9:58 PMViswanathan, Rajasekarone min
+in implementation support
+
+
+9:58 PMPillai, Esakki Thangappaokay ji  i ll wait 
+
+

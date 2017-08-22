@@ -1,0 +1,102 @@
+import java.io.PrintWriter;
+class fileLevelOperations {
+	val log = Logger.getLogger(this.getClass.getName)
+	val fs = FileSystem.get(sc.hadoopConfiguration)
+	def create(filePath:String)={
+		try{
+			fs.create( new Path(filepath))
+			println("New File Created Sucessfully..")
+			log.info("New File was Created Sucessfully")
+			}catch {
+				case e:Exception =>  { println("We are Getting the Exception While Creating the File"); log.info("We are Getting the Exception While Creating the File") }
+				}
+	}
+
+	def readFile(filePath:String) ={
+		fs.open(new Path(filePath))
+		}
+		
+	def writeFile(filePath:String ,data:String )={
+		val output = fs.open(new Path(filePath))
+		val writer = new PrintWriter(output)
+		writer.write(data)
+		writer.write("\n")
+		writer.close()
+		println("Writer have been Closed")
+		log.info("File Write was Created Sucessfully")
+		
+	}
+	
+	def createFolder(folderPath:String) = {
+	val location = new Path(folderPath)
+	if(!fs.exists(location)){
+			println("Location is not available \n we are creating the Folder")
+			fs.mkdirs(location)
+			log.info("New Folder was Created Sucessfully")
+		}
+	}
+	
+	def removeFile(filePath:String) ={
+		val location = new Path(filePath)
+		if (!fs.exists(location)) println("File Is not available"
+		else {
+		
+			fs.delete(location,true)}
+			log.info("Files were deleted Sucessfully")
+	}
+	def copyFromLocalOperation(srcFilePath:String , destFilePath:String)= {
+		fs.copyFromLocal(srcFilePath,destFilePath)
+		println("File has been copied from local to the Cluster")
+		log.info("File has been copied from local to the Cluster")
+	}
+	def copyToLocalOperation(srcFilePath:String , destFilePath:String)= {
+		fs.copyToLocal(srcFilePath,destFilePath)
+		println("File has been copied from Cluster to the Local")
+		log.info("File has been copied from Cluster to the Local")
+	}
+	def setReplication ( filePath :String , num:Int) ={ 
+		fs.setReplication(new path ( filePath) , num)
+	}
+	def getInfo(srcFilePath:String , methodName:String) = methodName match {
+	
+	case "getBlockSizes" |"getblocksizes" 		= {
+													val block = fs.getBlockSizes(new Path(srcFilePath))
+													println( " Block Informations is as of below \n "+ block)
+												  }
+	case "getDefaultBlockSize" = {
+									val defBlock = fs.getDefaultBlockSize(new Path(srcFilepath))
+									println( " Default Block Informations is as of below \n "+ defBlock )
+								 }
+	case "getFileChecksum"     = {
+									val fileCheck = fs.getFileChecksum(new Path(srcFilepath))
+									println( " File CheckSum \n "+ fileCheck )
+								 }
+								 
+	case "getFileStatus"        = {
+									val fileCheck = fs.getFileStatus(new Path(srcFilepath))
+									println( " File CheckSum \n "+ fileCheck )
+								   }
+	case "getReplication"        = {
+									val repFactor = fs.getReplication(new Path(srcFilepath))
+									println( " File Replication Factor is  \n "+ repFactor )
+								   }
+	}
+}
+
+
+def operations (methodName:String, srcFilePath:String, destFilePath:String , fileExists:Boolean) = methodName match {
+
+	case "CREATE" if fileExists == TRUE => fileLevelOperations.create(srcFilePath)
+	case "Write" 						=> fileLevelOperations.create(srcFilePath,"Hi Welcome to the Programming Language")
+	case "delete" 						=> fileLevelOperations.remove(srcFilepath)
+	case "createNewFolder" 				=> fileLevelOperations.createFolder(srcFilepath)
+	case "copyFromLocal" 				=> fileLevelOperations.copyFromLocalOperation(srcFilepath,destFilePath)
+	case "copyToLocal" 					=> fileLevelOperations.copyToLocalOperation(srcFilepath,destFilePath)
+	case "setReplication" 				=> fileLevelOperations.setReplication(srcFilepath,4)
+	case "getInfo"                      => fileLevelOperations.getInfo(srcFilepath,"getBlockSizes")
+	case _                              => println(" selected Operations are unavailable as of Now ")
+
+}
+
+
+	

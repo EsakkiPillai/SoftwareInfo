@@ -1,0 +1,212 @@
+Problems : 1 
+**Using sqoop, import orders table into hdfs to folders /user/cloudera/problem1/orders. File should be loaded as Avro File and use snappy compression
+**Using sqoop, import order_items  table into hdfs to folders /user/cloudera/problem1/order-items. Files should be loaded as avro file and use snappy compression
+
+**Using Spark Scala load data at /user/cloudera/problem1/orders and /user/cloudera/problem1/orders-items items as dataframes.
+
+**Expected Intermediate Result: Order_Date , Order_status, total_orders, total_amount
+In plain english, please find total orders and total amount per status per day. 
+The result should be sorted by order date in descending, order status in ascending and total amount in descending and total orders in ascending
+
+Aggregation should be done using below methods. However, sorting can be done using a dataframe or RDD. Perform aggregation in each of the following ways
+a). Just by using Data Frames API – here order_date should be YYYY-MM-DD format
+b). Using Spark SQL  – here order_date should be YYYY-MM-DD format
+c). By using combineByKey function on RDDS — No need of formatting order_date or total_amount
+
+Store the result as parquet file into hdfs using gzip compression under folder
+/user/cloudera/problem1/result4a-gzip
+/user/cloudera/problem1/result4b-gzip
+/user/cloudera/problem1/result4c-gzip
+ Store the result as parquet file into hdfs using snappy compression under folder
+/user/cloudera/problem1/result4a-snappy
+/user/cloudera/problem1/result4b-snappy
+/user/cloudera/problem1/result4c-snappy
+Store the result as CSV file into hdfs using No compression under folder
+/user/cloudera/problem1/result4a-csv
+/user/cloudera/problem1/result4b-csv
+/user/cloudera/problem1/result4c-csv
+
+create a mysql table named result and load data from /user/cloudera/problem1/result4a-csv to mysql table named result
+
+
+=====================================================================================================================================================================================
+
+Step 1:
+sqoop import --connect jdbc:mysql://nn01.itversity.com:3306/retail_dba --username retail_dba ---password itversty \
+--table orders 
+--compress
+--compression-codec  org.apache.hadoop.io.compress.snappyCodec
+--target-dir /user/cloudera/problem1/orders
+--as-avrodatafile
+
+
+step 2: 
+sqoop import --connect jdbc:mysql://nn01.itversity.com:3306/retail_dba --username retail_dba --password itversity \
+--table orders_item \
+--compress \
+--compression-codec org.apache.hadoop.io.compress.snappyCodec \
+--target-dir  /user/cloudera/problem1/order-items \
+--as-avrodatafile
+
+step 3:
+
+val order = sc.textFile("/user/cloudera/problem1/orders").toDF
+val orders_items=sc.textFile("/user/cloudera/problem1/order_items").toDF
+
+val ordersDF=SqlContext.read.avro("/user/cloudera/problem1/orders")
+val order_itemsDF=SqlContext.read.avro("/user/cloudera/problem1/order_items")
+
+
+
+step 4 :
+
+val joinedDatasetDF = ordersDF.join(order_itemsDF,ordersDF("order_id")==order_itemsDF("order_item_order_id"))
+
+
+
+joinedDatasetDF.groupBy(to_date(from_unixtime(col("order_date")/1000)).alias("order_formatted_date") , col("order_status")).
+agg(round(sum("order_item_subtotal") ,2 ).alias("totalAmount"), countDistinct("order_item_quantity").alias("total_orders")).
+order by (col("order_date").desc , col("order_status") ,col("totalAmount").desc,col("total_orders") )
+
+
+
+
+
+select o.order_date ,o.order_status , sum(oi.order_item_subtotal) as totalAmount , count(oi.order_item_quantity) as total_orders
+from orders o join order_items oi  on 0.order_id == oi.oreder_item_id
+group by o.order_date , o.order_status 
+order by o.order_date desc , o.order_status asc , totalAmoount desc , total_otders asc 
+
+//step 4b
+joinedOrderDataDF.registerTempTable("order_joined");
+
+var sqlResult = sqlContext.sql("
+select to_date(from_unixtime(cast(order_date/1000 as bigint))) as order_formatted_date, order_status, 
+cast(sum(order_item_subtotal) as DECIMAL (10,2)) as total_amount, count(distinct(order_id)) as total_orders 
+from order_joined 
+group by to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status 
+order by order_formatted_date desc,order_status,total_amount desc, total_orders");
+
+
+
+
+
+
+
+
+
+
+
+
+
+sqlContext.setconf("spark.sql.parquet.compression.codec","gzip")
+dataFrameResult.write.parquet("/user/cloudera/problem1/result4a-gzip")
+sqlResult.write.parquet("/user/cloudera/problem1/result4b-gzip");
+comByKeyResult.write.parquet("/user/cloudera/problem1/result4c-gzip");
+
+sqlContext.setConf("spark.sql.parquet.compression.codec","snappy")
+dataFrameResult.write.parquet("/user/cloudera/problem1/result4a-snappy")
+sqlResult.write.parquet("/user/cloudera/problem1/result4b-snappy")
+comByKeyResult.write.parquet("/user/cloudera/problem1/result4c-snappy")
+
+dataFrameResult.map(x => x.mkstring(",")).storeAsTextFile("/user/cloudera/problem1/result4a-csv")
+sqlResult.map(x => x.mkstring(",")).storeAsTextFile("/user/cloudera/problem1/result4b-csv")
+comByKeyResult.map(x=> x.mkstring(",")).storeAsTextFile("/user/cloudera/problem1/result4c-csv")
+
+
+create table retail_db.result(
+  order_date varchar(255) not null,
+  order_status varchar(255) not null, 
+  total_orders int, 
+  total_amount numeric, 
+  constraint pk_order_result primary key (order_date,order_status)
+  ); 
+  
+  
+  
+  sqoop export --connect:jdbc:mysql://nn01.itversity.com:3306/retail_db  --username retail_dba --password itversity \
+  --export-dir /user/cloudera/problem1/result4a-csv \
+  --table result \
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

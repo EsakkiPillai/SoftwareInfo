@@ -1,0 +1,157 @@
+Problem 3:
+
+**** Import all tables from mysql database into hdfs as avro data files. 
+	 use compression and the compression codec should be snappy. 
+	 data warehouse directory should be retail_stage.db
+	 
+	 
+**** Create a metastore table that should point to the orders data imported by sqoop job above. 
+	 Name the table orders_sqoop.	 
+	 
+	 
+**** Write query in hive that shows all orders belonging to a certain day. This day is when the most orders were placed. select data from orders_sqoop.
+
+**** query table in impala that shows all orders belonging to a certain day. This day is when the most orders were placed. select data from order_sqoop.
+
+**** Now create a table named retail.orders_avro in hive stored as avro, 
+	 the table should have same table definition as order_sqoop. 
+	 Additionally, this new table should be partitioned by the order month i.e -> year-order_month.(example: 2014-01) 
+ 
+**** Load data into orders_avro table from orders_sqoop table	 
+	 
+	 
+**** Write query in hive that shows all orders belonging to a certain day. This day is when the most orders were placed. select data from orders_avro
+
+
+**** evolve the avro schema related to orders_sqoop table by adding more fields named (order_style String, order_zone Integer)
+
+
+	 
+**** insert two more records into orders_sqoop table.	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+sqoop import-all-tables --connect jdbc:mysql://nn01.itversity.com:3306/retail_db --username retail_dba --password itversity   \
+--warehouse-dir /user/hive/warehouse/retail_stage.db    \
+--compress    \
+--compression   codec org.apache.hadoop.compression.Snappy \
+--stored-as-avrodatfile 
+
+                
+				
+We have to create a external table orders_sqoop along with the avro file schema 
+
+	1) we need to get the orders.avro file to local 
+		hadoop fs -get /user/hive/warehouse/retail_stage.db/orders/part-m-00000.avro .
+		
+	2) now we are getting the schema out of this avro file 
+			avro-tools getschema part-m-00000.avro >orders.avsc 
+	3) upload this avro schema to the Hdfs 
+			hadoop fs -mkdir /user/hive/schemas
+			hadoop fs -put /home/esakkipillai/orders.avsc /user/hive/schemas
+	4) Create an External Table on top of the data with the schema available 
+			create external table orders_sqoop 
+			stored as AVRO 
+			location '/user/hive/warehouse/retail_stage.db/orders/part-m-00000.avro'
+			TBLPROPERTIES ('avro.schema.url=/user/hive/schemas/orders.avsc')
+			
+	
+
+	
+Hive Query 
+
+	select * from (
+		select a.*,dense_rank() over (order by order_count desc) rnk from (
+			select os.* , count(1) over ( partition by os.order_date ) order_count 
+			from orders_sqoop os 
+		) a
+	) b where rnk =1;
+
+
+
+create database retail;
+
+create table orders_avro (
+  order_id int,
+  order_date date,
+  order_customer_id int,
+  order_status string)
+  partitioned by (order_month string)
+STORED AS AVRO;
+
+
+
+INSERT  OVERWRITE  TABLE  orders_avro  partition(order_month)
+ select order_id ,  to_date(from_unixtime(cast(order_date/1000 as int))), 
+  order_customer_id, 
+  order_status, 
+  substr(from_unixtime(cast(order_date/1000 as int)),1,7) as order_month 
+from default.orders_sqoop;
+
+
+
+
+// Evolve Avro Schema  
+// 1. Get schema file
+hadoop fs -get /user/hive/schemas/order/orders.avsc
+// 2. Open schema file
+gedit orders.avsc
+// 3. Edit schema file
+{
+  "type" : "record",
+  "name" : "orders",
+  "doc" : "Sqoop import of orders",
+  "fields" : [ {
+    "name" : "order_id",
+    "type" : [ "null", "int" ],
+    "default" : null,
+    "columnName" : "order_id",
+    "sqlType" : "4"
+  }, {
+    "name" : "order_date",
+    "type" : [ "null", "long" ],
+    "default" : null,
+    "columnName" : "order_date",
+    "sqlType" : "93"
+  }, {
+    "name" : "order_customer_id",
+    "type" : [ "null", "int" ],
+    "default" : null,
+    "columnName" : "order_customer_id",
+    "sqlType" : "4"
+  },{
+    "name" : "order_style",
+    "type" : [ "null", "string" ],
+    "default" : null,
+    "columnName" : "order_style",
+    "sqlType" : "12"
+  }, {
+    "name" : "order_zone",
+    "type" : [ "null", "int" ],
+    "default" : null,
+    "columnName" : "order_zone",
+    "sqlType" : "4"
+  }, {
+    "name" : "order_status",
+    "type" : [ "null", "string" ],
+    "default" : null,
+    "columnName" : "order_status",
+    "sqlType" : "12"
+  } ],
+  "tableName" : "orders"
+}
+
+// 3. copy modified schema file to HDFS again
+hadoop fs -copyFromLocal -f orders.avsc /user/hive/schemas/order/orders.avsc
+
+
+insert with new Values 
+INSERT INTO TABLE  ORDERS_SQOOP VALUES()
+INSERT INTO TABLE  ORDERS_SQOOP VALUES()
+
+
+

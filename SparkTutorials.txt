@@ -1,0 +1,102 @@
+Apache Spark - 
+
+Chapter 1 :- 
+
+Apache Spark is a Cluster Computing platform designed to be fast and general purpose 
+
+
+
+
+
+Chapter 4 :-  Wprking with key/Value Pair RDD 
+----------------------------------------------
+
+Pair RDDs are a useful building block in many programs, as they expose operations that allow you to act on each key in parallel or regroup data across the network.
+
+Creating the Pair RDD 
+ val pairs = lines.map ( rec => ( rec.split(",")[0] , rec ))
+ 
+ pair RDD are allowed to use all the Transformations available to the standard RDD 
+ since Pair RDD contains tuples we need to passs the function which operates on the tuples rather than the individual elements 
+
+List of Functions available as Follows :- 
+	reduceByKey(func)
+	groupByKey()
+	combineByKey(createCombiner,mergeValue,mergeCombiners,partitioner)
+	mapValues(func)
+	flatMapValues(func)
+	keys()
+	values()
+	sortByKey()
+Working with Two Pair RDD 
+	subtractByKey
+	join 
+	rightOuterJoin
+	leftOuterJoin
+	cogroup
+	
+------------------------------------------------------------------------
+case class Fruits (ID:Int , Name:String , Quantity:Int)
+val src = sc.textFile("/user/esakkipillai/sparkSql/Resources/fruits.txt").map(_.split(",")).map ( x =>	Fruits ( x(0).trim.toInt , x(1) , x(2).trim.toInt ) ) .toDF()
+src.registerTempTable("Fruits")
+val records = sqlContext.sql("select * from Fruits")
+records.show()
+
+loading the Csv File 
+ val file = "/user/esakkipillai/sparkSql/Resources/cars.csv"
+sqlContext.
+nsql.load("com.databricks.spark.csv", Map("path" -> file, "header" -> "true")).registerTempTable("cars")
+ val csvsrc = sqlContext.read.format("com.databricks.spark.csv").
+	 |option("header", "true").
+     | option("inferSchema", "true").
+     | load("/user/esakkipillai/sparkSql/Resources/cars.csv")	
+	
+---------------------------------------------------------------------------------------------
+Reading Json data 
+
+val cars = "/user/esakkipillai/sparkSql/Resources/cars.json"
+val schemaOptions = Map ("header" ->"true" , "inferSchema" -> "true")
+val carDF: DataFrame = sqlContext.read.format(json).options(schemaOptions).load(cars)	
+
+al events = sc.parallelize(      |   """{"action":"create","timestamp":"2016-01-07T00:01:17Z"}""" :: Nil)
+events: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[37] at parallelize at <console>:30
+
+ val df = sqlContext.read.json(events)
+ 
+ 
+ 
+ ------------------------
+ Creating the Complex Json Structure 
+ val events = sc.parallelize(
+  """{"action":"create","timestamp":1452121277}""" ::
+  """{"action":"create","timestamp":"1452121277"}""" ::
+  """{"action":"create","timestamp":""}""" ::
+  """{"action":"create","timestamp":null}""" ::
+  """{"action":"create","timestamp":"null"}""" ::
+  Nil
+)
+
+
+ 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

@@ -1,0 +1,9 @@
+Common Terms Used 
+
+What is worker node & edge nodes?
+
+Edge Node :- 
+	Edge node refers to a dedicated node (machine) where no Hadoop services are running, and where you install only so-called Hadoop clients (hdfs, Hive, HBase etc. clients).
+	A client means that only respective component client libraries and scripts will be installed, together with its config files. 
+	 
+	

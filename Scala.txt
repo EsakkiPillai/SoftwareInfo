@@ -1,0 +1,59 @@
+
+Create a Method 
+
+to create a Method use def as the keyword 
+
+def max ( x: Int , y:Int):Int ={
+	if(x>y) 
+	  x
+	 
+	else 
+	  y
+}
+Nevertheless, it is often a good idea to indicate function result types explicitly, even when the compiler doesn’t require it. Such type annotations can make the code easier to read,
+because the reader need not study the function body to figure out the inferred result type
+
+Comments used in Scala 
+-----------------------
+// Single Line Command 
+/* */ multi line command 
+
+create a demo.scala file and call this file from the command line 
+
+demo.scala
+----------
+
+println("hello +args(0) + ".." )
+
+$scala demo.scala esakki
+
+Write a script to read the Arguments using for each method 
+args.foreach(arg => println(arg))
+args.foreaach(println)
+
+A simple For loop 
+
+for ( arg <- args){
+
+	pritln(arg)
+}
+
+arrays in Scala are accessed by placing the index inside parentheses, not square brackets as in Java
+Scala: if a method takes only one parameter, you can call it without a dot or parentheses. The to in this example is actually a method that takes one Int argument. The code 0 to 2 is transformed into the method call (0).to(2)
+So greetStrings(i) gets transformed into greetStrings.apply(i). Thus accessing an element of an array in Scala is simply a method call like any other
+
+greetStrings(0) = "Hello"   will be transformed into:     greetStrings.update(0, "Hello")
+
+Scala achieves a conceptual simplicity by treating everything, from arrays to expressions, as objects with methods.
+
+
+val numNames = Array("zero", "one", "two")
+
+The compiler infers the type of the array to be Array[String], because you passed strings to it. What you’re actually doing in Listing 3.2 is calling a factory method,named apply, which creates and returns the new array. 
+This apply method takes a variable number of arguments2 and is defined on the Array companion object. You’ll learn more about companion objects in Section 4.3. If you’re a Java programmer, you can think of this as calling a static method 
+named apply on class Array. A more verbose way to call the same apply method is:
+
+val numNames2 = Array.apply("zero", "one", "two")
+
+	
+

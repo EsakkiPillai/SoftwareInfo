@@ -1,0 +1,8 @@
+> sbt
+
+if the Program has onely one main class 
+
+run -> will trigger the main 
+
+we have to send the values at the run time 
+
