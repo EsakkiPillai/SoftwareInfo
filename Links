@@ -3,12 +3,21 @@ Introduction to Hadoop (HDFS & Map/Reduce) for Spark developers
   
   Spark Partitions details 
     https://acadgild.com/blog/partitioning-in-spark/
-    
+ Load Mysql Data into Spark 
+  https://acadgild.com/blog/loading-mysql-data-into-spark/
     
    SPARKSQl
+   https://docs.databricks.com/spark/latest/spark-sql/index.html                  primary 2.0
     https://declara.com/content/35Gz4ngR
 
+HIVE Windowing Function 
 
+  https://acadgild.com/blog/windowing-functions-in-hive/
+  
+ hIVE 
+ https://hadoopsters.net/2015/12/07/preparing-for-the-hdpcd-exam-data-analysis/
+ 
+  
 Datasets
 ----------------------------
 
