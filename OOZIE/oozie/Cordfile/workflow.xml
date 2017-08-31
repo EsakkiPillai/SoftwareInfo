@@ -1,0 +1,47 @@
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="coordfile-wf">
+<start to='ForkNode' />
+	<fork name="ForkNode">
+		<path start="sqoop-Orders"/>
+		<path start="sqoop-order_items"/>
+	</fork>
+        <action name="sqoop-Orders">
+                <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+                                <job-tracker>${jobTracker}</job-tracker>
+                                <name-node>${nameNode}</name-node>
+                                <configuration>
+                                        <property>
+                                                <name>mapred.job.queue.name</name>
+                                                <value>${queueName}</value>
+                                        </property>
+                                </configuration>
+                                <command>import --connect jdbc:mysql://nn01.itversity.com/retail_db --username retail_dba --password itversity --table orders -m 3 --split-by order_id --target-dir  /user/esakkipillai/hadoop/oozie_demo/cordfile/retail_db/orders</command>
+                        </sqoop>
+                        <ok to="join-node"/>
+                        <error to="sqoop-load-fail"/>
+                </action>
+        <action name="sqoop-order_items">
+                <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+                                <job-tracker>${jobTracker}</job-tracker>
+                                <name-node>${nameNode}</name-node>
+                                <configuration>
+                                        <property>
+                                                <name>mapred.job.queue.name</name>
+                                                <value>${queueName}</value>
+                                        </property>
+                                </configuration>
+                                <command>import --connect jdbc:mysql://nn01.itversity.com/retail_db --username retail_dba --password itversity --table order_items -m 3 --split-by order_item_order_id --target-dir  /user/esakkipillai/hadoop/oozie_demo/cordfile/retail_db/order_items</command>
+                        </sqoop>
+                        <ok to="join-node"/>
+                        <error to="sqoop-load-fail"/>
+         </action>
+		<join name="join-node" to="end"/>
+		
+		<kill name="sqoop-load-fail">
+                        <message>Sqoop export failed please check Dude, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+         </kill>
+
+		 
+
+<end name="end"/>
+
+</workflow-app>

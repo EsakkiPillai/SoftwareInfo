@@ -1,0 +1,29 @@
+<coordinator-app name="my_coord_app" frequency="${freqMin}" start="${start}" end="${end}" timezone="${timeZoneDef}" xmlns="uri:oozie:coordinator:0.4">
+<controls>
+		<concurrency>1</concurrency>
+		<execution>FIFO</execution>
+</controls>
+
+<datasets>
+		<dataset name="raw-logs" frequency="${coord:minutes(5)}" initial-instance="${start}" timezone="UTC">
+            <uri-template>${triggerFileDir}</uri-template>
+			<done-flag>trigger</done-flag>
+        </dataset>
+</datasets>
+
+<input-events>
+
+		<data-in name="input" dataset="raw-logs">
+            <instance>${start}</instance>
+         </data-in>
+
+</input-events>
+
+
+<action>
+		<workflow>
+            <app-path>${workflowAppPath}</app-path>
+        </workflow>
+</action>
+
+</coordinator-app>

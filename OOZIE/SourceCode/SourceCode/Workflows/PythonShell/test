@@ -1,0 +1,219 @@
+<workflow-app name="sample-wf" xmlns="uri:oozie:workflow:0.1">
+...
+<fork name="forking">
+    <path start="firstparalleljob"/>
+    <path start="secondparalleljob"/>
+</fork>
+<action name="firstparallejob">
+    <map-reduce>
+        <job-tracker>foo:9001</job-tracker>
+        <name-node>bar:9000</name-node>
+        <job-xml>job1.xml</job-xml>
+    </map-reduce>
+    <ok to="joining"/>
+    <error to="kill"/>
+</action>
+<action name="secondparalleljob">
+    <map-reduce>
+        <job-tracker>foo:9001</job-tracker>
+        <name-node>bar:9000</name-node>
+        <job-xml>job2.xml</job-xml>
+    </map-reduce>
+    <ok to="joining"/>
+    <error to="kill"/>
+</action>
+<join name="joining" to="nextaction"/>
+...
+</workflow-app>
+
+<workflow-app name="foo-wf" xmlns="uri:oozie:workflow:0.1">
+...
+<decision name="decision">
+    <switch>
+        <case to="mapreduce">
+            ${jobType eq "mapreduce"}
+        </case>
+        <case to="hive">
+            ${jobType eq "hive"}
+        </case>
+        <case to="pig">
+            ${jobType eq "pig"}
+        </case>
+        <default to="end"/>
+    </switch>
+</decision>
+...
+<action name="mapreduce">
+    ...
+</action>
+<action name="hive">
+    ...
+</action>
+<action name="pig">
+    ...
+</action>
+
+</workflow-app>
+
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="wf-name">
+<global>
+    <job-tracker>${job-tracker}</job-tracker>
+    <name-node>${name-node}</name-node>
+    <job-xml>job1.xml</job-xml>
+    <configuration>
+        <property>
+            <name>mapred.job.queue.name</name>
+            <value>${queueName}</value>
+        </property>
+    </configuration>
+</global>
+<action name="mapreduce">
+    ...
+</action>
+<action name="hive">
+    ...
+</action>
+<action name="pig">
+    ...
+</action>
+...
+</workflow-app>
+
+<coordinator-app name="cron-coord" frequency="${coord:minutes(5)}"
+                 start="${start}" end="${end}" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
+<controls>
+    <timeout>${my_timeout}</timeout>
+    <concurrency>${my_concurrency}</concurrency>
+    <execution>${my_execution}</execution>
+    <throttle>${my_throttle}</throttle>
+</controls>
+<action>
+    <workflow>
+        <app-path>${workflowAppUri}</app-path>
+        <configuration>
+            <property>
+                <name>jobTracker</name>
+                <value>${jobTracker}</value>
+            </property>
+            <property>
+                <name>nameNode</name>
+                <value>${nameNode}</value>
+            </property>
+            <property>
+                <name>queueName</name>
+                <value>${queueName}</value>
+            </property>
+        </configuration>
+    </workflow>
+</action>
+</coordinator-app>
+
+<workflow-app xmlns="uri:oozie:workflow:0.5" name="one-op-wf">
+<start to="action"/>
+<action name="action">
+    <shell xmlns="uri:oozie:shell-action:0.2">
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+        <configuration>
+            <property>
+                <name>mapred.job.queue.name</name>
+                <value>${queueName}</value>
+            </property>
+        </configuration>
+        <exec>echo</exec>
+        <argument>my_output=Hello Oozie</argument>
+        <capture-output/>
+    </shell>
+    <ok to="end"/>
+    <error to="end"/>
+</action>
+<end name="end"/>
+</workflow-app>
+
+<coordinator-app name="aggregator-coord" frequency="${coord:hours(1)}" start="${start}" end="${end}" timezone="UTC" xmlns="uri:oozie:coordinator:0.2">
+<controls>
+    <concurrency>1</concurrency>
+</controls>
+
+<datasets>
+    <dataset name="raw-logs" frequency="${coord:minutes(20)}" initial-instance="2016-01-01T00:00Z" timezone="UTC">
+        <uri-template>${nameNode}/user/${coord:user()}/${oozieRoot}/aggregator/input-data/rawLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}/${MINUTE}</uri-template>
+    </dataset>
+    <dataset name="aggregated-logs" frequency="${coord:hours(1)}" initial-instance="2016-01-01T01:00Z" timezone="UTC">
+        <uri-template>${nameNode}/user/${coord:user()}/${oozieRoot}/aggregator/output-data/aggregatedLogs/${YEAR}/${MONTH}/${DAY}/${HOUR}</uri-template>
+    </dataset>
+</datasets>
+
+<input-events>
+    <data-in name="input" dataset="raw-logs">
+        <start-instance>${coord:current(-2)}</start-instance>
+        <end-instance>${coord:current(0)}</end-instance>
+    </data-in>
+</input-events>
+
+<output-events>
+    <data-out name="output" dataset="aggregated-logs">
+        <instance>${coord:current(0)}</instance>
+    </data-out>
+</output-events>
+
+<action>
+    <workflow>
+        <app-path>${nameNode}/user/${coord:user()}/${oozieRoot}/aggregator</app-path>
+        <configuration>
+            <property>
+                <name>jobTracker</name>
+                <value>${jobTracker}</value>
+            </property>
+            <property>
+                <name>nameNode</name>
+                <value>${nameNode}</value>
+            </property>
+            <property>
+                <name>queueName</name>
+                <value>${queueName}</value>
+            </property>
+            <property>
+                <name>inputData</name>
+                <value>${coord:dataIn('input')}</value>
+            </property>
+            <property>
+                <name>outputData</name>
+                <value>${coord:dataOut('output')}</value>
+            </property>
+        </configuration>
+    </workflow>
+</action>
+</coordinator-app>
+
+<bundle-app name='bundle-app' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns='uri:oozie:bundle:0.2'>
+<parameters>
+    <property>
+        <name>start</name>
+        <value>${start}</value>
+    </property>
+    <property>
+        <name>end</name>
+        <value>${end}</value>
+    </property>
+</parameters>
+<controls>
+    <kick-off-time>2016-07-01T00:00Z</kick-off-time>
+</controls>
+<coordinator name='coord-1'>
+    <app-path>${nameNode}/user/${userName}/${oozieRoot}/aggregator/coordinator.xml</app-path>
+</coordinator>
+<coordinator name='coord-2'>
+    <app-path>${nameNode}/user/${userName}/${oozieRoot}/aggregator/coordinator.xml</app-path>
+    <configuration>
+        <property>
+            <name>start</name>
+            <value>${start}</value>
+        </property>
+        <property>
+            <name>end</name>
+            <value>${end}</value>
+        </property>
+    </configuration>
+</coordinator>
+</bundle-app>

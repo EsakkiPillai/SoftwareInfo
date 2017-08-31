@@ -1,0 +1,125 @@
+<workflow-app xmlns="uri:oozie:workflow:0.4" name="daily_revenue-wf">
+<start to='ForkNode' />
+	<fork name="ForkNode">
+		<path start="sqoop-Orders"/>
+		<path start="sqoop-order_items"/>
+	</fork>
+        <action name="sqoop-Orders">
+                <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+                                <job-tracker>${jobTracker}</job-tracker>
+                                <name-node>${nameNode}</name-node>
+                                <configuration>
+                                        <property>
+                                                <name>mapred.job.queue.name</name>
+                                                <value>${queueName}</value>
+                                        </property>
+                                </configuration>
+                                <command>import --connect jdbc:mysql://nn01.itversity.com/retail_db --username retail_dba --password itversity --table orders -m 3 --split-by order_id --target-dir  /user/esakkipillai/hadoop/oozie_demo/dailyrevfork/retail_db/orders</command>
+                        </sqoop>
+                        <ok to="join-node"/>
+                        <error to="sqoop-load-fail"/>
+                </action>
+        <action name="sqoop-order_items">
+                <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+                                <job-tracker>${jobTracker}</job-tracker>
+                                <name-node>${nameNode}</name-node>
+                                <configuration>
+                                        <property>
+                                                <name>mapred.job.queue.name</name>
+                                                <value>${queueName}</value>
+                                        </property>
+                                </configuration>
+                                <command>import --connect jdbc:mysql://nn01.itversity.com/retail_db --username retail_dba --password itversity --table order_items -m 3 --split-by order_item_order_id --target-dir  /user/esakkipillai/hadoop/oozie_demo/dailyrevfork/retail_db/order_items</command>
+                        </sqoop>
+                        <ok to="join-node"/>
+                        <error to="sqoop-load-fail"/>
+         </action>
+		<join name="join-node" to="hive-Table_Ctreation"/>
+        <action name="hive-Table_Ctreation">
+                <hive xmlns="uri:oozie:hive-action:0.2">
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+        <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>              
+            </configuration>
+                        <script>Hive_Create_Table.hql</script>
+        </hive>
+        <ok to="hive-Join"/>
+        <error to="fail"/>
+        </action>		
+		<action name ="hive-Join">
+			<hive xmlns="uri:oozie:hive-action:0.2">
+			<job-tracker>${jobtracker}</job-tracker>
+			 <name-node>${nameNode}</name-node>
+			<configuration>
+				<property>
+					<name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+				</property>
+			</configuration>
+			<script>/home/esakkipillai/hadoop/oozie_demo/dailyrevfork/Hive_Join.hql</script>
+			</hive>
+			<ok to="ForkexportNode"/>
+			<error to="fail"/>			
+		</action>
+	<fork name="ForkexportNode">
+		<path start="sqoop-export-Orders"/>
+		<path start="sqoop-export-order_items"/>
+	</fork>
+	<action name="sqoop-export-Orders">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <command>export --connect jdbc:mysql://nn01.itversity.com/retail_export --username retail_dba --password itversity --table orders_oozexpo -m 3  --export-dir  /user/esakkipillai/hadoop/oozie_demo/dailyrevfork/retail_db/orders</command>
+        </sqoop>
+        <ok to="join-mysql-node"/>
+        <error to="sqoop-load-fail"/>
+    </action>
+	<action name="sqoop-export-order_items">
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <configuration>
+                <property>
+                    <name>mapred.job.queue.name</name>
+                    <value>${queueName}</value>
+                </property>
+            </configuration>
+            <command>export --connect jdbc:mysql://nn01.itversity.com/retail_export --username retail_dba --password itversity --table order_items_oozexpo -m 3 --export-dir  /user/esakkipillai/hadoop/oozie_demo/dailyrevfork/retail_db/order_items</command>
+        </sqoop>
+        <ok to="join-mysql-node"/>
+        <error to="sqoop-load-fail"/>
+    </action>
+	<join name="join-mysql-node" to="shell"/>
+	<action name="shell">
+		<shell xmlns="uri:oozie:shell-action:0.1">
+			<job-tracker>${jobTracker}</job-tracker>
+			<name-node>${nameNode}</name-node>
+			<exec>run.sh</exec>
+			<file>/user/esakkipillai/hadoop/oozie_demo/dailyrevfork/run.sh</file>
+			<capture-output/>
+		</shell>
+    
+		<ok to="end"/>
+		<error to="fail"/>
+	</action>
+        <kill name="sqoop-load-fail">
+                        <message>Sqoop export failed please check Dude, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+         </kill>
+
+        <kill name="fail">
+        <message>Hive failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+<end name="end"/>
+
+</workflow-app>

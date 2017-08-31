@@ -1,0 +1,7 @@
+<coordinator-app name="my_coord_app" frequency="${freqMin}" start="${start}" end="${end}" timezone="${timeZoneDef}" xmlns="uri:oozie:coordinator:0.4">
+    <action>
+        <workflow>
+            <app-path>${workflowAppPath}</app-path>
+        </workflow>
+    </action>
+</coordinator-app>
