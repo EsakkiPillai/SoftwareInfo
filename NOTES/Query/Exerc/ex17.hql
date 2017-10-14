@@ -1,0 +1,2 @@
+USE esakraw;
+TRUNCATE TABLE esakraw.USERRECORDS;

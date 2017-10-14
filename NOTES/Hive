@@ -1,0 +1,1337 @@
+Apache Hive 
+---------------
+Hive is a datawarehouse software which facilitates reading writing managing data on the distributed storage system using SQL Syntax
+Hive provides SQL-like declarative language, called HiveQL, which is used for expressing queries. Using Hive-QL users associated with SQL are able to perform data analysis 
+Hive Engine Complies the Query into Mapreduce jobs to e executed on Hadoop.
+
+
+
+Hive operates on data stored in tables which consists of primitive data types and collection data types like arrays and maps.
+* Hive Tables and databases are generated First then the data is loaded 
+* Major difference between hive hql and sql is that hive exeutes on hadoop infracture rather than traditional databses. HQl will be converted into series of automatically generated map Reduce Code 
+* Hive Supports Bucketing and the Partitioning for easy retrieval of data when the clients executes the query 
+* Hive Uses Traditional Dtabase to store its metadata information , For SIngle user hive uses derby ( default apache  databse) database which doesnt support multi user connection . For multi User environment we got Mysql database to store the meta data.
+* Hive supports Custom UDF( User Defined Functions) for data clensing , filtering etc 
+* Hive Supports TEXT SEQUENCE ORC RC File Formats 
+
+** Relational Databases use "Schema On Read and Schema on write"
+
+Hive Architecture 
+-------------------
+
+Hive           hive                  hive storage 
+Clients        service                 metadata 
+
+
+Different Modes of Hive 
+-----------------------
+Hive can operate in two different Modes 
+	> Local mode        if hadoop is installed in pseduo distributed mode then we can use hive in this mode, its give better performance for small files 
+	>Mapreduce Mode     if hadoop is having multiple data nodes and data is distributed across the cluster then we can  use this mode 
+	
+by default hive will be in mapreduce mode to change it back to local mode 
+
+	>>> SET mapred.job.tracker= local;
+
+=============================================================================================================================================================================================================
+Data Types
+----------
+Numeric types 		=> TINYINT INT SMALLINT BIGINT FLOAT DOUBLE DECIMAL 
+String types        =>  CHAR VARCHAR STRING 
+Date/Time types     => TIMESTAMP  DATE TimeStamp stores the timestamp values in the format of ' YYYY-MM-DD HH:MM:SS:ffffff' format 
+Complex Types 	    =>  ARRAY<datatype>  MAP<primitive_type,data_type>  STRUCT<Col_name:data_type>   UNION<data_type,data_type>
+
+****Array 
+
+Array - a complex data type in hive which can stroe an ordered collection of same similar elements acessible using o based index 
+
+	CREATE TABLE  emp_array ( id INT , all_values array<INT> ) 
+	COMMENT 'This is a table we created for Array complex data type'
+	ROW FORMAT DELIMITED 
+	FIELDS TERMINATED BY ','
+	COLLECTION ITEMS TERMINATED BY '$'
+	STORED AS TEXTFILE;
+
+loading the data into it 
+	LOAD DATA LOCAL INPATH	'/HOME/ESAK/TEST.TXT' INTO TABLE EMP_ARRAY
+overwrite the table data and load it 
+	LOAD DATA LOCAL INPATH	'/HOME/ESAK/TEST.TXT' OVERWRITE INTO TABLE EMP_ARRAY
+Accessing the data 
+	SELECT ID , ALL_VALUES[1] FROM EMP_ARRAY;
+	
+****STRUCT 
+
+		A Complex data type in hive which can store a set of fields of different data types. the element of struct are acess using dot 
+	
+SAMPLE DATA.TXT 
+1,32$65$moderate
+2,37$78$humid
+	
+CREATE TABLE EMP_STRUCT ( ID INT , WEATHER_READING STRUCT<TEMP:INT , HUMIDITY:INT ,COMMENT:STRING> )
+COMMENT ' THIS IS THE DEMO FOR STRUCT DATAT TYPE'
+ROW FORMAT DELIMITED 
+LINES TERMINATED BY ','
+COLLECTION ITEMS TERMINTAED BY '$'
+STORED AS TEXTFILE;
+	
+	load data local inpath "//.txt" into table EMP_STRUCT 
+	
+	SELECT ID , WEATHER_READING.COMMENT FROM EMP_STRUCT;
+	
+****MAP
+
+A COMPLEX DATA TYPE FRO HIVE TO STORE KEY AND VALUE PAIRS , VALUES CAN BE ACCESSED USING THE KEYS 
+
+SAMPLE DATA.TXT
+	1,1@india is great#2@india won icc t20#3@jai hind
+	2,1@we are awesome#2@i like cricket
+	
+	CREATE TABLE EMP_MAP ( ID INT , VALUES MAP<INT,STRING> )
+	COMMENT ' THIS IS THE SAMPLE MAP TABLE'
+	ROW FORMAT DELIMITED 
+	FIELDS TERMINATED BY ','
+	COLLECTION ITEMS TERMINATED BY '#'
+	MAP  KEYS TERMINATED BY '@'
+	
+
+SELECT ID , VALUES[1] FROM EMP_MAP 
+
+
+============================================================================================================================================================================================================================
+Creating and Dropping Databases:
+---------------------------------
+
+>>show databases;
+>>create database Aug_rel;
+>> drop database Aug_rel;
+
+CREATE (DATABASE|SCHEMA) [IF NOT EXISTS] database_name
+  [COMMENT database_comment]
+  [LOCATION hdfs_path]
+  [WITH DBPROPERTIES (property_name=property_value, ...)];
+ 	
+ 
+hive> (DESCRIBE|DESC) (DATABASE|SCHEMA) [EXTENDED] database_name
+
+ALTER (DATABASE|SCHEMA) database_name SET DBPROPERTIES (property_name=property_value, ...);
+ALTER (DATABASE|SCHEMA) database_name SET OWNER [USER|ROLE] user_or_role;
+ 
+DROP (DATABASE|SCHEMA) [IF EXISTS] database_name [RESTRICT|CASCADE];
+
+	***The default behavior is RESTRICT, where DROP DATABASE will fail if the database is not empty. 
+	***To drop the tables in the database as well, use DROP DATABASE ... CASCADE. 
+	
+RESTRICT – This is optional and even if it is used, it is same as default hive behavior, i.e. it will not allow database to be dropped until all the tables inside it are dropped.
+CASCADE – This argument allows to drop the non-empty databases with single command. DROP with CASCADE is equivalent to dropping all the tables separately and dropping the database finally in cascading manner.
+
+hive> create database if not exists mydatabase
+with dbproperties(‘Experiment Name’ = ‘Correlation age/sentiment’,
+‘date’ = ‘2013-07-11’,
+‘Lead Developer’ = ‘John Foo’,
+‘Lead Developer Email’ = ‘jfoo@somewhere.com’);
+
+we can use any Property as shown above 
+--------------------------------------------------------------------------------------------------------------------------	
+  
+Creating Altering droping table
+--------------------------------
+
+CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.]table_name
+      [(col_name data_type [COMMENT col_comment], ...)]
+      [COMMENT table_comment]
+      [PARTITIONED BY (col_name data_type [COMMENT col_comment], ...)]
+      [CLUSTERED BY (col_name, ...) [SORTED BY (col_name [ASC|DESC], ...)] INTO num_buckets BUCKETS]
+      [SKEWED BY (col_name, ...) ON ([(col_value, ...), ...|col_value, ...])
+             [STORED AS DIRECTORIES] ]
+      [
+         [ROW FORMAT row_format]
+         [STORED AS file_format]
+         | STORED BY 'storage.handler.class.name' [WITH SERDEPROPERTIES (...)]
+      ]
+      [LOCATION hdfs_path]
+      [TBLPROPERTIES (property_name=property_value, ...)] 
+      [AS select_statement];
+
+
+TBLPROPERTIES ("comment"="table_comment")
+TBLPROPERTIES ("hbase.table.name"="table_name") //for hbase integration
+TBLPROPERTIES ("immutable"="true") or ("immutable"="false")
+TBLPROPERTIES ("orc.compress"="ZLIB") or ("orc.compress"="SNAPPY") or ("orc.compress"="NONE") 
+TBLPROPERTIES ("transactional"="true") or ("transactional"="false") default is "false"
+TBLPROPERTIES ("NO_AUTO_COMPACTION"="true") or ("NO_AUTO_COMPACTION"="false"), the default is "false"
+
+ROW FORMAT DELIMITED 
+    FIELDS TERMINATED BY '\001'
+    COLLECTION ITEMS TERMINATED BY '\002'
+    MAP KEYS TERMINATED BY '\003'
+    LINES TERMINATED BY '\n'
+	
+data_type
+  : primitive_type
+  | array_type
+  | map_type
+  | struct_type
+  | union_type  -- (Note: Available in Hive 0.7.0 and later)
+ 
+primitive_type
+  : TINYINT
+  | SMALLINT
+  | INT
+  | BIGINT
+  | BOOLEAN
+  | FLOAT
+  | DOUBLE
+  | DOUBLE PRECISION -- (Note: Available in Hive 2.2.0 and later)
+  | STRING
+  | BINARY      -- (Note: Available in Hive 0.8.0 and later)
+  | TIMESTAMP   -- (Note: Available in Hive 0.8.0 and later)
+  | DECIMAL     -- (Note: Available in Hive 0.11.0 and later)
+  | DECIMAL(precision, scale)  -- (Note: Available in Hive 0.13.0 and later)
+  | DATE        -- (Note: Available in Hive 0.12.0 and later)
+  | VARCHAR     -- (Note: Available in Hive 0.12.0 and later)
+  | CHAR        -- (Note: Available in Hive 0.13.0 and later)
+ 
+array_type
+  : ARRAY < data_type >
+ 
+map_type
+  : MAP < primitive_type, data_type >
+ 
+struct_type
+  : STRUCT < col_name : data_type [COMMENT col_comment], ...>
+ 
+union_type
+   : UNIONTYPE < data_type, data_type, ... >  -- (Note: Available in Hive 0.7.0 and later)
+ 
+row_format
+  : DELIMITED [FIELDS TERMINATED BY char [ESCAPED BY char]] [COLLECTION ITEMS TERMINATED BY char]
+        [MAP KEYS TERMINATED BY char] [LINES TERMINATED BY char]
+        [NULL DEFINED AS char]   -- (Note: Available in Hive 0.13 and later)
+  | SERDE serde_name [WITH SERDEPROPERTIES (property_name=property_value, property_name=property_value, ...)]
+ 
+file_format:
+  : SEQUENCEFILE
+  | TEXTFILE    -- (Default, depending on hive.default.fileformat configuration)
+  | RCFILE      -- (Note: Available in Hive 0.6.0 and later)
+  | ORC         -- (Note: Available in Hive 0.11.0 and later)
+  | PARQUET     -- (Note: Available in Hive 0.13.0 and later)
+  | AVRO        -- (Note: Available in Hive 0.14.0 and later)
+  | INPUTFORMAT input_format_classname OUTPUTFORMAT output_format_classname
+ 
+constraint_specification:
+  : [, PRIMARY KEY (col_name, ...) DISABLE NOVALIDATE ]
+    [, CONSTRAINT constraint_name FOREIGN KEY (col_name, ...) REFERENCES table_name(col_name, ...) DISABLE NOVALIDATE 
+	  
+Notes :- 
+
+Table and column comments are string literals (single-quoted).
+  
+	  
+to list all the tables >>show tables;
+ 
+to create a simple table >>create table emp_sample (empid int , empname  string)
+load data into that table >>load data local inpath '/home/cloudera/emp.txt' INTO table emp_sample
+
+describe the table >>describe table 
+
+change the table to >>alter table emp_sample to emp
+
+delete the table >>drop table emp
+
+truncate the data in the table >> truncate emp
+
+Types of Table 
+---------------
+Managed/internal  Table  =    > first we have to create the table and we load the data 
+							  > we call this data on schema 
+							  > By droping this table both data and schema will be removed 
+							  > stored location of the table will be /user/hive/warehouse
+							  > if we want hive to manage the complete lifecycle of data including the deletion then we use this 
+							  
+***By default Hive creates managed tables, where files, metadata and statistics are managed by internal Hive processes.
+***A managed table is stored under the hive.metastore.warehouse.dir path property, by default in a folder path similar to /apps/hive/warehouse/databasename.db/tablename/.
+***If a managed table or partition is dropped, the data and metadata associated with that table or partition are deleted. 
+***If the PURGE option is not specified, the data is moved to a trash folder for a defined duration
+***Use managed tables when Hive should manage the lifecycle of the table, or when generating temporary tables.
+	
+External table				  > Data will be availale in HDFS the table is going to created on HDFS data
+							  > we can say like its creating schema on data 
+							  > At the time of dropping the  table , it will drop the schema . Data will be available in HDFS 
+							  > External table provide an option to create multiple schema on the same data stored in HDFS instead of deleting the data every time whenever schema updates
+							  > external tables are very useful if outside application uses the same data which is available in HDFS
+
+**An external table describes the metadata / schema on external files. 
+**External table files can be accessed and managed by processes outside of Hive							  
+**External tables can access data stored in sources such as Azure Storage Volumes (ASV) or remote HDFS locations.
+**If the structure or partitioning of an external table is changed, an MSCK REPAIR TABLE table_name statement can be used to refresh metadata information.
+**Use external tables when files are already present or in remote locations, and the files should remain even if the table is dropped.
+
+skewed tableS (these are not seperate table type)
+
+								>Hive will split the skewed (very often) values records into separate files, and the same will be considered into account at the time of querying this table, so that it can skip (or include) the whole file based on the input criteria.
+								>These are not separate table types, but can be managed or external.
+								
+***Skewing technique similar to Partitioning but it is recommended when only few values are occurring very often in input.
+***  if there are 1000 mappers and 1000 partitions, and each mapper gets at least 1 row for each key, we will end up in creating 1 million intermediate files, So Namenode’s memory will be in trouble to store metadata about all these files.								
+*** If we partition a table by country and there 200 countries in input file, but 80% records are from only US, UK, IN, JPN, 
+			**then it is better to go by Skewing by country for four values
+***In skewing, it will create only 5 separate files/directories (4 for US, UK, IN, JPN and 1 for remaining all) 
+where as partitioning will create 200 directories making the structure very complex.
+
+
+SKEWED BY – This clause is useful to create skewed tables. Further details can be discussed during example for this clause
+
+=============================================================================================================================================================================================================================
+Recover Partitions (MSCK REPAIR TABLE)
+Hive stores a list of partitions for each table in its metastore. If, however, new partitions are directly added to HDFS (say by using hadoop fs -put command), 
+the metastore (and hence Hive) will not be aware of these partitions unless the user runs ALTER TABLE table_name ADD PARTITION commands on each of the newly added partitions.
+
+users can run a metastore check command with the repair table option:
+
+MSCK REPAIR TABLE table_name;
+
+which will add metadata about partitions to the Hive metastore for partitions for which such metadata doesn't already exist. 
+In other words, it will add any partitions that exist on HDFS but not in metastore to the metastore
+ 
+ When there is a large number of untracked partitions, there is a provision to run MSCK REPAIR TABLE batch wise to avoid OOME (Out of Memory Error). 
+ By giving the configured batch size for the property hive.msck.repair.batch.size it can run in the batches internally. 
+ The default value of the property is zero, it means it will execute all the partitions at once.
+=============================================================================================================================================================================================================================
+Storage Formats 
+----------------
+STORED AS TEXTFILE
+STORED AS SEQUENCEFILE
+STORED AS ORC
+STORED AS PARQUET
+STORED AS AVRO
+STORED AS RCFILE
+=======================================================================================================================================================================================================
+
+Compression in hive 
+-----------------------
+First we have to check for available compression in hive 
+	set io.compression.codec;
+it will list the available compression codec in the hadoop cluster. Some of them are namely  
+	  org.apache.hadoop.io.compress.GzipCodec,
+      org.apache.hadoop.io.compress.DefaultCodec,
+      org.apache.hadoop.io.compress.BZip2Codec,
+      org.apache.hadoop.io.compress.SnappyCodec
+
+	  
+hive> set hive.exec.compress.output=true;
+hive> set mapreduce.output.fileoutputformat.compress=true;
+hive> set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec;
+hive> set mapreduce.output.fileoutputformat.compress.type=BLOCK;
+hive> set hive.exec.compress.intermediate=true;
+
+Keeping data compressed in Hive tables has, in some cases, been known to give better performance than uncompressed storage; both in terms of disk usage and query performance.
+
+we can load the compressed data in to the table as below :-
+LOAD DATA LOCAL INPATH '/tmp/weblogs/20090603-access.log.gz' INTO TABLE raw;
+
+CREATE TABLE raw (line STRING)
+   ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n';
+   
+   Table raw has been stored as textfile which is the default file storage format 
+   However, in this case Hadoop will not be able to split your file into chunks/blocks and run multiple maps in parallel. This can cause underutilization of your cluster's 'mapping' power.
+   
+The recommended practice is to insert data into another table, which is stored as a SequenceFile. 
+
+A SequenceFile can be split by Hadoop and distributed across map jobs whereas a GZIP file cannot be. For example:
+CREATE TABLE raw (line STRING)
+   ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n';
+ 
+CREATE TABLE raw_sequence (line STRING)
+   STORED AS SEQUENCEFILE;
+ 
+LOAD DATA LOCAL INPATH '/tmp/weblogs/20090603-access.log.gz' INTO TABLE raw;
+ 
+SET hive.exec.compress.output=true;
+SET io.seqfile.compression.type=BLOCK; -- NONE/RECORD/BLOCK (see below)
+INSERT OVERWRITE TABLE raw_sequence SELECT * FROM raw;
+
+The value for io.seqfile.compression.type determines how the compression is performed. Record compresses each value individually while BLOCK buffers up 1MB (default) before doing compression.
+===================================================================================================================================================================================================================================================================================================================================================================
+
+
+=====================================================================================================================================================================================================================================
+-------------------------------------------------------
+create an internal Table 
+
+create table emp ( empId int , empName string ) Row format delimited Fields terminated by '\t'
+
+Creating the External Table 
+
+create external table ( empId INT , empNmae STRING ) Row format delimited Fields terminated by '\t' Location '/sqoop/emp'
+
+Tables can also be created and populated by the results of a query in one create-table-as-select (CTAS) statement. 
+
+
+CREATE AN EXTERNAL TABLE WITH ORC FILE FORMAT WITH SNAPPY COMPRESSION 
+
+CREATE EXTERNAL TABLE User_ORC(
+	first_name VARCHAR(64),
+	last_name VARCHAR(64)
+	)
+	COMMENT 'Temporary ORC table for testing purpose'
+	STORED AS ORC
+	LOCATION '/user/hive/orc/user'
+   	TBLPROPERTIES ("orc.compress"="SNAPPY");
+
+
+Skewed Tables Stored in SequenceFile
+-------------------------------------------
+
+
+CREATE EXTERNAL TABLE User_Skewed(
+	first_name VARCHAR(64),
+	last_name VARCHAR(64)
+)
+	COMMENT 'Skewed table for testing purpose'
+	SKEWED BY (country) ON ('AU')
+        STORED AS SEQUENCEFILE;
+		
+		
+some other Skewed Examples 
+
+
+CREATE TABLE table_name (col1 STRING, col2 int, col3 STRING)
+  SKEWED BY (col1, col2) ON (('s1',1), ('s3',3), ('s10',20), ('s20',20)) [STORED AS DIRECTORIES];
+
+  
+--------------------------------------------------------------------------------------------------------------------------------------------	
+CTAS has these restrictions:
+	The target table cannot be a partitioned table.
+	The target table cannot be an external table.
+	The target table cannot be a list bucketing table.
+	
+CREATE TABLE new_key_value_store
+   ROW FORMAT SERDE "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+   STORED AS RCFile
+   AS
+SELECT (key % 1024) new_key, concat(key, value) key_value_pair
+FROM key_value_store
+SORT BY new_key, key_value_pair;
+
+
+The above CTAS statement creates the target table new_key_value_store with the schema (new_key DOUBLE, key_value_pair STRING) derived from the results of the SELECT statement. 
+If the SELECT statement does not specify column aliases, the column names will be automatically assigned to _col0, _col1, and _col2 etc. 
+In addition, the new target table is created using a specific SerDe and a storage format independent of the source tables in the SELECT statement.
+
+---->Table names and column names are case insensitive
+---->CREATE-TABLE-AS-SELECT cannot create external tables, partitioned tables and bucketed tables
+---->Default Storage format is TEXTFILE.
+---->Default field delimiter is not tab (‘\t’) but it is Ctrl+A (‘\001’)
+---->Table can be made freeze so that no other changes are allowed on this with table property TBLPROPERTIES (“immutable”=”true”).
+---->Comments are single quoted string literals
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+A Sample Hive Sql Script and How To Run it 
+------------------------------------------
+STEP 1:-
+>> sudo vim sample.sql 
+>> create table product ( productid: int, productname: string, price: float, category: string) rows format delimited fields terminated by ',' ;  
+		// here product is the table name and its columns are of primitive data types 
+		// by default lines are seperated by a new line 
+		// in file fields are terminated by "," so we soecify the same while creating hive table 
+>> describe product;
+>> load data local inpath '/home/cloudera/input.txt' into table product ;
+		// we are loading the data locally into the Product table 
+		
+>> select * from product ;
+
+STEP 2:- 
+>>> hive -f sample.sql   // while executing the script make sure the entire path of the file is available 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Run Hive Script File Passing Parameter
+-----------------------------------------
+hive -hiveconf myvar=2016-01-01
+
+hive>set myvar ;
+myvar=2016-01-01
+
+we can set the variable at any time as below 
+
+>>set myvar = 2016-01-02
+>> set myvar;
+hive> select * from t_t1 limit 2;
+OK
+string_1	2016-01-01
+string_2	2016-01-02
+Time taken: 4.904 seconds, Fetched: 2 row(s)
+ 
+hive> describe t_t1;
+OK
+f1                  	string
+d1                  	date
+Time taken: 0.62 seconds, Fetched: 2 row(s)
+ 
+ 
+ select * from t_t1 where d1 = '${hiveconf:myvar}'
+ 
+ we can use the same in the view also 
+  create view v_t1 as select * from t_t1 where d1 = '${hiveconf:myvar}';
+  
+  
+ at the unix shell itself 
+
+ hive -hiveconf myvar=2016-01-01 -e 'select * from t_t1 where d1="${hiveconf:myvar}";'
+
+
+executing multiple sessions 
+
+[hive@sandbox ~]$ hive -hiveconf myvar=2016-01-01 -e 'select * from t_t1 where d1="${hiveconf:myvar}"; select * from t_t1 where d1="${hiveconf:myvar}" AND d1 is not null limit 2'
+ 
+============================================================================================================================================================================================================
+ALTER TABLE 
+
+rename Table 			alter table esak into esak_new 
+TABLE COMMENTS 			ALTER TABLE table_name SET TBLPROPERTIES ('comment' = new_comment);
+ADD SERDE Properties    ALTER TABLE TABLE_NAME SET SERDEPROPERTIES( 'field.delim=',')
+
+
+ADD PARTITION 			ALTER TABLE page_view ADD PARTITION (dt='2008-08-08', country='us') location '/path/to/us/part080808'
+                          PARTITION (dt='2008-08-09', country='us') location '/path/to/us/part080809';
+						  
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Partitions - 
+* partition means dividing the data based on some column like date or country. partitioning can be done on multiple columns which impose multi-dimensional structure on directory storage.
+* partitions are defined at the time of table creation using PARTITIONED BY clause,  with the list of column definitions for partitioning
+*
+
+** As the data is sliced/parts query response time is faster to process the small part of the data instead of looking for a search in the entire data set 
+** in a large table if we partition the table , then select * from table where country = 'In' will look for the data inside the Partition table In rather than the entire table employee 
+** partition is used for distributong the load horizontally 
+
+Limitations 
+
+*** Having too many partition will create large number of files in the HDFS , which is an overhead for the NameNode , Since it will keep all the metadata in the memory 
+*** Partition is optimised for some queries based on the where clause but may be less responsive for other important queries like groupby clause 
+*** IN MR Processing, Huge no of partition will lead to huge no of tasks in MR job thus creating lot of overhead to maintaing start up  and teardown the JVM
+
+CREATE TABLE EMPLOYEE ( ID INT , NAME STRING , AGE INT , SALARY BIGINT )
+COMMENT 'THIS IS EMPLOYEE TABLE STORED AS TEXT FILE'
+PARTITIONED BY ( DEPARTMENT STRING)
+ROW FORMAT DELIMITED BY 
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE 
+
+## PARTITIONED BY COLUMN SHOULD NOT BE AVAILABLE IN THE TABLE DEFINITION PART IT SHOULD BE IN PARTITION BY CLAUSE 
+
+* TO CHECK THE PARTITION DETAILS 
+> DESCRIBE FORMATTED EMP_PART;
+
+*** WE CAN CREATE THE EXTERNAL PARTITIONED TABLE WITHOUT SPECIFYING THE LOCATION CLAUSE 
+
+hive partitions is a way to organize tables into partitions by dividing the tables into different parts based on the partition keys  
+partition keys are basic element for determing how the data is stored in the table 
+
+"Client having Some E –commerce data which belongs to India operations in which each state (38 states) operations mentioned in as a whole. If we take state column as partition key and perform partitions on that India data as a whole, we can able to get Number of partitions (38 partitions) which is equal to number of states (38) present in India. Such that each state data can be viewed separately in partitions tables.
+
+Without partitioning, any query on the table in Hive will read the entire data in the table.
+If we have a large table then queries may take long time to execute on the whole table. We can make Hive to run query only on a specific partition by partitioning the table and running queries on specific partitions. 
+A table can be partitioned on columns like – city, department, year, device etc.
+
+
+
+hr_EMPLOYEE.CSV 
+1,aarti,28,30000
+2,sakshi,22,20000
+3,mahesh,25,25000
+
+IT_EMPLOYEE.CSV
+10001,rajesh,29,50000
+10002,rahul,23,250000
+10003,dinesh,35,70000
+
+>> LOAD DATA INPATH '/home/hadoop/hr_employees.csv' INTO TABLE Employee PARTITION (department='HR');
+>> LOAD DATA INPATH '/HOME/HADOOP/IT_EMPLOYEE.CSV' INTO TABLE EMPLOYEE PARTITION (DEPARTMENT ='IT');
+
+PARTITION BY MULTPLE COLUMNS
+------------------------------
+
+CREATE TABLE Employee(
+ID BIGINT,
+NAME STRING, 
+AGE INT,
+SALARY BIGINT 
+)
+COMMENT 'This is Employee table stored as textfile partitioned by STATE and DEPARTMENT'
+PARTITIONED BY(STATE STRING, DEPARTMENT STRING)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE;
+
+
+>>LOAD DATA INPATH '/home/hadoop/mh_hr_employees.csv' INTO TABLE Employee PARTITION (state='Maharashtra', department='HR');
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+STATIC PARTITIONING  IT IS USED WHEN THE VALUES FOR PARTITION COLUMNS ARE KNOWN WHEN LOADING THE DATA INTO HIVE 
+
+** IN STATIC PARTITION data should contain only the columns listed in the table definition , if our input column layout is acoording to the expected layout and we already have seperate files for each partitioned key value pairs , like one seperate file for each combination of state and country ( parttition columns state country )  then these files can be easily loaded 
+
+** to Overwrite the Partitiontable use OVERWRITE 
+
+Data Loading 
+-----------------
+#Load employees data for partition having department as HR
+LOAD DATA INPATH '/home/hadoop/hr_employees.csv' 
+INTO TABLE Employee PARTITION (department='HR');
+
+#Load employees data for partition having department as BIGDATA
+LOAD DATA INPATH '/home/hadoop/bigdata_employees.csv' 
+INTO TABLE Employee PARTITION (department='BIGDATA');
+
+INSERT OVERWRITE TABLE partitioned_user
+PARTITION (country = 'US', state = 'AL')
+SELECT * FROM another_user au 
+WHERE au.country = 'US' AND au.state = 'AL';
+	  
+to insert the data from the employee_old to the partitioned Employee table 
+
+INSERT OVERWRITE TABLE Employee PARTITION (department='HR') 
+SELECT id, name, age, salary from Employee_old where department='HR';
+INSERT INTO TABLE Employee PARTITION (department='BIGDATA') 
+SELECT id, name, age, salary from Employee_old; where department='BIGDATA';
+
+dIRECTLY INSERT THE VALUES 
+
+#Insert a single row in a table partition
+INSERT INTO table Employee PARTITION (department='HR')
+values(50000, 'Rakesh', 28, 57000);
+
+#Insert Multiple rows in a table partition
+INSERT INTO table Employee PARTITION (department='BIGDATA')
+values(60001, 'Sudip', 34, 62000),(70001, 'Suresh', 45, 76000);
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DYNAMIC PARTITIONING IT IS USED WHEN THE VALUES FOR PARTITION COLUMNS ARE NOT KNOWN WHEN LOADING THE DATA INTO HIVE
+
+** Instead of loading each partition with single SQL statement as shown above, which will result in writing lot of SQL statements for huge no of partitions, Hive supports dynamic partitioning with which we can add any number of partitions with single SQL execution.
+** Hive will automatically splits our data into separate partition files based on the values of partition keys present in the input files.
+** We can also mix dynamic and static partitions by specifying it as PARTITION(country = ‘US’, state). But static partition keys must come before the dynamic partition keys
+**      INSERT INTO TABLE partitioned_user	PARTITION (country, state)
+        SELECT  firstname ,lastname  ,state  FROM temp_user;
+** But by default, Dynamic Partitioning is disabled in Hive to prevent accidental partition creations. To use dynamic partitioning we need to set below properties either in Hive Shell 
+		set hive.exec.dynamic.partition=true;
+		set hive.exec.dynamic.partition.mode=nonstrict;
+		set hive.exec.max.dynamic.partitions=1000;
+		set hive.exec.max.dynamic.partitions.pernode=1000;
+By default, dynamic partition mode is set to strict in Hive to specify at least one static partition column (key), which prevents generation huge no of partitions by a badly designed query.  
+
+		
+While inserting data into partition hive table , the partition column should be specified at the end of the selet statement 
+This is required for Hive to detect the values of partition columns from the data automatically. 
+The order of partitioned columns should be the same as specified while creating the table.
+
+>>> in Dynamic Partition strict mode requires atleast one static partition column to turn this offset 
+			set hive.exec.dynamic.partition.mode=nonstrict;
+			
+to insert the data from the employee_old to the partitioned Employee table 
+
+INSERT OVERWRITE TABLE EMPLOYEE PARTITION (DEPARTMENT) SELECT ID,NAME,AGE,SALARY,DEPARTMENT FROM EMPLOYEE_OLD;
+
+#Insert a single row in a table partition
+INSERT INTO table Employee PARTITION (department)
+values(50000, 'Rakesh', 28, 57000,'HR');
+
+#Insert Multiple rows in a table partition
+INSERT INTO table Employee PARTITION (department)
+values(60001, 'Sudip', 34, 62000, 'HR'),(70001, 'Suresh', 45, 76000, 'BIGDATA');
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+>> show partition_Table
+>> DESCRIBE FORMATTED PARTITION_TABLE
+
+*** WE CAN ALTER THE pARTITIONS AS BELOW 
+ADDING PARTITITONS
+		>> ALTER TABLE EMP_PART ADD IF NOT EXISTS PARTITION (COUNTRY = 'US' AND STATE ='XY' ) LOCATION /HDFS/FILE/PATH1
+		
+DROP PARTITIONS 
+		>> DROP TABLE EMP_PART DROP IF EXISTS PARTITION ( COUNTRY ='US' ,STATE ='XY')
+
+CHANGING PARTITIONS 
+
+		>> ALTER TABLE EMP_PART PARTITION (COUNTRY ='US' ,STATE ='XY') SET LOCATION '/HDFS/NEWPATH'
+
+===================================================================================================================================================================================================================
+get the data from http://hadooptutorial.info/wp-content/uploads/2014/12/UserRecords.txt
+
+	first_name,last_name,address,country,city,state,post,phone1,phone2,email,web
+a) create a table  as textfile and load the data 
+b) create table with country and state as partition and load the data from the above table 
+
+
+
+
+========================================================================================================================================================================================================================
+when are partitioning our tables based geographic locations like country, some bigger countries will have large partitions 
+(ex: 4-5 countries itself contributing 70-80% of total data) where as small countries data will create small partitions 
+(remaining all countries in the world may contribute to just 20-30 % of total data). So, In these cases Partitioning will not be ideal
+
+* Bucketing is a method to evenly distribute the data across many files. files are placed in the Buckets based on the Hash Algorithm 
+* Bucketing Feature of Hive can be used to distribute/organise  the table/partition data into multiple files such that similiar records are present in the same file 
+* While creting a hive table user nees to give the column to be used for bucketing and the number of buckets to store the data into. Which records go to which bucket are decided by the Hash value of columns used for bucketing.
+* [Hash(column(s))] MOD [Number of buckets] 
+* Physically, each bucket is just a file in the table directory, and Bucket numbering is 1-based
+* Data for each bucket is stored in a separate HDFS file under the table directory on HDFS. Inside each bucket, we can define the arrangement of data by providing the SORT BY column while creating the table
+* data present  in the bucket can be further classfied into Buckets 
+* Bucketing - division of data is performed based on the hash of particular columns that we selected 
+* Buckets uses some form of Hashing algorithm at back end to read each record and place it into the tables
+* Bucketing can be done along with Partitioning on Hive tables and even without partitioning.
+* To enable Bucketing in hive 
+		set hive.enforce.bucketing= true;
+		
+To Create a Bucket 
+------------------
+
+CREATE table emp_buc ( fname String , job_id INT , dept STRING , salary BIGINT , country STRING ) 
+COMMENT 'This is Employee table and we store it into 4 bucketing'
+CLUSTERED BY (COUNTRY) INTO 4 BUCKETS
+ROW FORMAT DELIMITED  
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+
+CREATE TABLE bucketed_user(firstname VARCHAR(64),city 	  VARCHAR(64),state     VARCHAR(64),phone1    VARCHAR(64))
+        COMMENT 'A bucketed sorted user table'
+        PARTITIONED BY (country VARCHAR(64))
+        CLUSTERED BY (state) SORTED BY (city) INTO 32 BUCKETS
+        STORED AS SEQUENCEFILE;
+*** Unlike partitioned columns (which are not included in table columns definition) , Bucketed columns are included in table definition as shown in above code for state and city columns
+
+>>> set hive.enforce.bucketing = true;
+
+*** The property hive.enforce.bucketing = true similar to hive.exec.dynamic.partition=true property in partitioning. By Setting this property we will enable dynamic bucketing while loading data into hive table.
+*** It will automatically sets the number of reduce tasks to be equal to the number of buckets mentioned in the table definition (for example 32 in our case) and automatically selects the clustered by column from table definition.
+*** f we do not set this property in Hive Session, we have to manually convey same information to Hive that, number of reduce tasks to be run (for example in our case, by using set mapred.reduce.tasks=32) and CLUSTER BY (state) and SORT BY (city) clause in the above INSERT …SELECT statement at the end.
+
+
+
+LOADING DATA INTO BUCKETS 
+
+INSERT INTO emp_buc 
+SELECT FNAME ,JOB_ID , DEPT, SALARY , COUNTRY FROM EMP;
+
+INSERT OVERWRITE TABLE Employee SELECT * from Employee_old;
+
+Advantages
+-----------
+>>>Fast Map side Joins – If two tables are bucketed by the same column(s) into same number of buckets and the join is performed on the bucketed column(s), then hive can do efficient map side join by reading the same bucket from both the tables and performing a join, as all the data for similar records will be present in the corresponding bucket from both the tables. If the records are sorted inside each bucket, then hive can join the data using merge, which is a linear time operation. Bucketing will help only when the join key and bucketing key are the same.
+>>>Efficient Group by – If the group by is performed on the bucketed column(s), then aggregations can be performed in the combiner. This will reduce network traffic by sending less data to reducers.
+>>>Sampling – Using Bucketing we can run queries on a sample of data from the table. This is beneficial while testing, so that we need not run our queries on whole data.
+
+SELECT firstname, country, state, city FROM bucketed_user TABLESAMPLE(BUCKET 32 OUT OF 32 ON state);
+
+it will return few records from each buckets ( from 32 buckets) 
+
+we can also perform random sampling 
+
+SELECT firstname, country, state, city FROM bucketed_user TABLESAMPLE (1 PERCENT)
+
+SELECT firstname, country, state, city FROM temp_user LIMIT 129 ;  it will read the entire file and limit the data 
+To Enable Bucketing and Sort the Data Below Property Should be enabled in HIVE
+
+set hive.enforce.bucketing=true;
+set hive.enforce.sorting=true;
+
+
+=========================================================================================================================================================================================================================================================================================================================================================
+VIEW 
+*** Hive also has the concept of a View as a "copy" of the table
+*** The main reason for having a view of a table is to simplify some of the complexities of a larger table into a more Flat structure. For instance, if you have a table that has 100 columns, but you are only interested in 5, you could create a View with those 5 columns
+*** Unlike some RDBMS, once the Hive view is created, its schema is frozen immediately. Subsequent changes in the underlying table will not be reflected in the View; and if the table is dropped, the view will fail. 
+*** Using Views vs Tables does not yield any significant performance when running a query, even is the view has significant fewer columns.The advantage of using a View over a table are only for simplifying the query
+
+CREATE VIEW creates a view with the given name. An error is thrown if a table or view with the same name already exists. You can use IF NOT EXISTS to skip the error.
+
+  CREATE VIEW [IF NOT EXISTS] [db_name.]view_name [(column_name [COMMENT column_comment], ...) ]
+  [COMMENT view_comment]
+  [TBLPROPERTIES (property_name = property_value, ...)]
+  AS SELECT ...;
+
+  
+ A CREATE VIEW statement will fail if the view's defining SELECT expression is invalid.
+ An error is thrown if a table or view with the same name already exists
+ If the SELECT contains unaliased scalar expressions such as x+y, the resulting view column names will be generated in the form _C0, _C1
+ Column Comments are not automatically inherited from underlying columns
+ 
+ CREATE VIEW onion_referrers(url COMMENT 'URL of Referring page')
+  COMMENT 'Referrers to The Onion website'
+  AS
+  SELECT DISTINCT referrer_url
+  FROM page_view
+  WHERE page_url='http://www.theonion.com';
+
+DROP VIEW  
+** DROP VIEW removes metadata for the specified view.    DROP VIEW [IF EXISTS] [db_name.]view_name;
+
+Alter View Properties
+
+ALTER VIEW [db_name.]view_name SET TBLPROPERTIES table_properties;
+ 
+table_properties:
+  : (property_name = property_value, property_name = property_value, ...
+  
+  
+  
+================================================================================================================================================================================================================================================
+
+INDEX 
+An Index acts as a reference to the records. Instead of searching all the records, we can refer to the index to search for a particular record. 
+Indexes maintain the reference of the records. So that it is easy to search for a record with minimum overhead. 
+Indexes also speed up the searching of data.
+
+Major Advantage of using Index is 
+		whenever we perform a query on a table that has an index, there is no need for the query to scan the entire the table it will check the index first and then goes to the particular column and then perforn the operation 
+		
+When to use Indexing?
+
+Indexing can be use under the following circumstances:
+
+If the dataset is very large.
+If the query execution is more amount of time than you expected.
+If a speedy query execution is required.
+When building a data model.
+
+Types of Indexes in Hive
+
+*Compact Indexing
+*Bitmap Indexing
+
+Lets Create a Table 
+	
+create table olympic(athelete STRING,age INT,country STRING,year STRING,closing STRING,sport STRING,gold INT,silver INT,bronze INT,total INT) row format delimited fields terminated by '\t' stored as textfile;
+
+load the data into the table
+	load data local inpath ‘path of your file‘into table olympic;
+	
+issue a Query 
+	select AVG(age) from olympics;   21.3 seconds 
+	
+now we create index for the olympic table 
+
+create index olympic_index 
+on table olympics(age)
+AS 	'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+with DEFERRED REBUILD;
+
+	*** The WITH DEFERRED REBUILD statement should be present in the created index because we need to alter the index in later stages using this statement.
+	*** org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler’ line specifies that a built in CompactIndexHandler will act on the created index, which means we are creating a compact index for the table.
+
+	
+ALTER INDEX OLYMPIC_INDEX on OLYMPIC REBUILD
+
+		A MapReduce job will be launched and the index creation is now completed.
+
+issue a Query 
+	select AVG(age) from olympics;   17.3 seconds 
+
+Now we know that by using indexes we can reduce the time of performing the queries.
+
+
+ Yes! We can have any number of indexes for a particular table and any type of indexes as well.
+ 
+ 
+ CREATE INDEX OLYMPIC_INDEX_BITMAP
+ ON TABLE OLYMPIC 
+ AS 'BITMAP'
+ WITH DEFERRED REBUILD;
+ 
+ ALTER INDEX OLYMPIC_INDEX_BITMAP REBUILD;
+ 
+ With different types (compact,bitmap) of indexes on the same columns, for the same table, 
+ the index which is created first is taken as the index for that table on the specified columns.
+
+TO VIEW THE AVAILABLE INDEX 
+
+	SHOW FORMATTED INDEX ON OLYMPICS 
+	
+TO DROP THE INDEX 
+
+	DROP INDEX IF EXISTS OLYMPIC_INDEX ON OLYMPIC 
+	
+It is essential to know when and where indexing shouldn’t be used. They should not be used in the following scenarios:
+
+***Indexes are advised to build on the columns on which you frequently perform operations.
+***Building more number of indexes also degrade the performance of your query.
+***Type of index to be created should be identified prior to its creation (if your data requires bitmap you should not create compact).This leads to increase in time for executing your query.
+
+Partitioning divides the larger dataset into smaller ones so that efficiency in processing the query increases. 
+But if you do indexing it won’t divide the dataset into smaller ones, rather it would create another table containing all the details of the table which you are indexed. 
+So when you try to execute any query on an indexed table it will first query on the index_table based on the data in the index it will directly query on the original table. 
+It is just like the index of any text book.
+------------------------------------------------------------------
+Creating ORC HIVE TABLE AND LOAD THE DATA 
+CREATE TABLE Employee(
+ID BIGINT,
+NAME STRING, 
+AGE INT,
+SALARY BIGINT 
+)
+COMMENT 'This is Employee table in ORC file format'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS ORC tblproperties ("orc.compress"="ZLIB");
+
+If you have data in text or csv format, then first load that data in a temporary table, which stores data in TEXTFILE format, and then import data from the temporary table into this table using a select query.
+
+Load the data 
+INSERT OVERWRITE TABLE Employee SELECT id, name, age, salary from Employee_text;
+=====================================================
+CREATE SEQUENCE HIVE TABLE AND LOAD IT 
+CREATE TABLE Employee(
+ID BIGINT,
+NAME STRING, 
+AGE INT,
+SALARY BIGINT 
+)
+COMMENT 'This is Employee table stored as sequencefile'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS SEQUENCEFILE;
+
+INSERT OVERWRITE TABLE Employee SELECT id, name, age, salary from Employee_text;
+
+
+=============================================================================================================================================================================================================================================================
+SOME CONFIGURATION PROPERTIES 
+-----------------------------
+Hive Warehouse Directory
+--------------------------
+Location of directory on HDFS which will be used for storing the hive warehouse data.
+
+Default Value: /user/hive/warehouse
+	show conf "hive.metastore.warehouse.dir";
+	
+Hive Execution Engine
+-----------------------
+	SHOW CONF "HIVE.EXECUTION.ENGINE";  => MR IS THE DSFAULLT VALUE IT CAN BE TEZ OR APACHE SPARK 
+Setting Number of Reducers
+----------------------------
+	SET MAPRED.REDUCE.TASKS;
+	SET MAPRED.REDUCE.TASKS=2;
+
+Partitioning                       hive.exec.dynamic.partition.mode
+------------
+Values can be (strict/nostrict). In strict mode, the user must specify at least one static partition in case the user accidentally overwrites all partitions. In nonstrict mode all partitions are allowed to be dynamic.
+Default Value: strict
+
+Parallel Execution              hive.exec.parallel
+-------------------
+
+Values can be (true/false). If set to true, then the jobs for different stages will be executed in parallel. A Hive query is converted to a number of MapReduce Jobs. All the MapReduce jobs will execute sequentially if this property is set to false. 
+If this property is set to true, then all independent jobs can be executed in parallel.
+Default Value: false
+
+
+hive.exec.parallel.thread.number
+The maximum number of MapReduce jobs which can be executed in parallel if hive.exec.parallel property is set to true.
+Default Value: 8
+
+====================================================================================================================================================================================================================================================================
+
+FUNCTIONS 
+=========
+Date Functions 
+--------------
+To_DATE >>>> SELECT To_DATE('2000-01-01 10:20:30');==> 2000-01-01
+YEAR >>>>>>> SELECT YEAR('2000-01-01 10:20:30');     2000             
+SELECT MONTH('2000-01-01 10:20:30');  01 
+SELECT DAY ('2000-01-01 10:20:30'); 01 
+SELECT WEEKOFYEAR('2000-03-01 10:20:30');    9
+SELECT DATE_ADD ('2000-01-01 10:20:30'  , 5);  2000-01-06
+SELECT DATE_SUB ('2000-03-01 10:20:30' , 5);   2000-02-25
+SELECT DATEDIFF('2000-03-01', '2000-01-10');   51 
+
+UNIX_TIMESTAMP() => converts the current time and date in to seconds , it find the difference between the 1970-01-01 00:00:00 UTC to the current timestamp 
+FROM_UNIXTIME () ==> CONVERTS THE SECODS INTO THE DATEFORMAT 
+
+SELECT FROM_UNIXTIME(UNIX_TIMESTAMP());                                        
+2015-05-18 05:43:37
+
+The FROM_UNIX function converts the specified number of seconds from Unix epoch and returns the date in the format ‘yyyy-MM-dd HH:mm:ss’.
+
+FROM_UNIXTIME( NO OF SECONDS , DATE FORMAT )
+SELECT FROM_UNIXTIME( UNIX_TIMESTAMP('2016-03-28 00:00:00','yyyy-MM-dd'),'YYYY-DD-MM');
+
+
+How can I cast a string in the format 'dd-MM-yyyy' to a date type also in the format 'dd-MM-yyyy' in Hive?
+'12-03-2010' as date 'dd-mm-yyyy'
+
+
+SELECT FROM_UNIXTIME(UNIX_TIMESTAMP('12-03-2010','DD-MM-YYYY'))
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+AGGREGATE FUNCTION 
+-------------------
+SUM 	select sum(sal) from Tri100;
+
+COUNT	select count(*) from Tri100;
+		select count(*) from Tri100 where sal>30000
+
+Average select avg(sal) from Tri100 where location='Banglore';
+		select avg(distinct sal) from Tri100;
+		
+Minimum select min(sal) from Tri100;
+
+Maximum select max(sal) from Tri100;
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+STRING FUNCTION
+---------------
+
+ASCII  		Returns the numeric value of the first character of str.   											select ASCII(‘hadoop’) from Tri100 where sal=22000;  104
+CONCAT 		The CONCAT function concatenates all the strings/columns.
+
+CONCAT_WS 	The CONCAT_WS function concatenates all the strings only strings and Column with datatype string   	select CONCAT_WS('+',name,location) from Tri100;
+			CONCAT_WS(string delimiter, string str1,str2……)”
+
+FIND_IN_SET  FIND_IN_SET(string search_string,string source_string_list)”
+			 The FIND_IN_SET function searches for the search_string in the source_string_list and returns the position of the first occurrence in the source_string_list. Here the source_string_list should be comma delimited one.
+				
+LENGTH 		 LENGTH function returns the number of characters in the string.
+
+LOWER/LCASE  The LOWER and LCASE convert the string into the Lower case.
+
+UPPER/ UCASE The UPPER and UCASE convert the string into the Upper case.				
+
+LPAD		 LPAD(string str,int len,string pad) 
+			 The LPAD function returns the string with a length of len characters left-padded with pad.
+			 
+RPAD 		 RPAD(string str,int len,string pad)
+			 The RPAD function returns the string with a length of len characters Right-padded with pad
+			 
+TRIM 		 TRIM Function removes all the trailing spaces from the string   select TRIM('        hive      ') from Tri100 where sal=22000; hive
+
+REPEAT 		REPEAT Function repeat the string for n times.  
+REVERSE     REVERSE Function gives the reverse string.  select REVERSE(name) from Tri100; luhar tihoM
+
+SPLIT 		 SPLITT(‘string1:string2’,’pat’)
+			 Split function splits the string depending on the pattern pat and returns an array of strings
+			 
+			 
+SUBSTR 		The SUBSTR or SUBSTRING function returns a part of the source string from the start position with the specified length of characters.
+			
+FORMAT 		FORMAT_NUMBER(number X,int D)”   returns results as a String 
+			Formats the number X to a format like #,###,###.##, rounded to D decimal places and returns result as a string. If D=0 then the value will only have fraction part there will not be any decimal part
+			select name,format_number(Hike,2) from Tri100;
+			rahul   40,000.00
+			
+INSTR       instr(string str,string substring)
+			Returns the position of the first occurrence of substr in str. Returns null if either of the arguments are null and returns 0 if substr could not be found in str. Be aware that this is not zero based. The first character in str has index 1.
+	
+LOCATE 		Locate(string substring, string str[,int pos])”
+			Returns the position of the first occurrence of substr in str after position pos.
+			
+
+TRANSLATE 	“translate(string|char|varchar input, string|char|varchar from, string|char|varchar to)”
+			select translate('Make sure u knew that code','e','o') from Tri100 where sal=22000;
+			Mako suro u know that codo
+
+===================================================================================================================================================================================================================================
+
+
+create a Hive table from the Json Data 
+
+Please refer the belo Link 
+http://docs.aws.amazon.com/athena/latest/ug/json.html
+
+
+====================================================================================================================================================================================================================================================
+
+Yes, SerDe is a Library which is built-in to the Hadoop API
+Hive uses Files systems like HDFS or any other storage (FTP) to store data, data here is in the form of tables (which has rows and columns).
+SerDe - Serializer, Deserializer instructs hive on how to process a record (Row). Hive enables semi-structured (XML, Email, etc) or unstructured records (Audio, Video, etc) 
+to be processed also. 
+For Example If you have 1000 GB worth of RSS Feeds (RSS XMLs). You can ingest those to a location in HDFS. 
+You would need to write a custom SerDe based on your XML structure so that Hive knows how to load XML files to Hive tables or other way around.
+=================================================================================================================================================================================================================================================================
+CSV SERDE - Use CSVSerde only when you have quoted text or really strange delimiters (such as blanks) in your input data to avoid a performance hit. 
+
+This SerDe treats all columns to be of type String. 
+Even if you create a table with non-string column types using this SerDe, the DESCRIBE TABLE output would show string column type. 
+The type information is retrieved from the SerDe. 
+To convert columns to the desired type in a table, you can create a view over the table that does the CAST to the desired type.
+
+data 
+-----
+121 'Hello World' 4567
+232 Text 5678
+343 'More Text' 6789
+
+
+CREATE TABLE my_table(col1 string, col2, string, col3 string)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (  "separatorChar" = " ",  
+                        "quoteChar"  = "'") 
+
+						
+CREATE TABLE my_table(a string, b string, ...)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (
+   "separatorChar" = "\t",
+   "quoteChar"     = "'",
+   "escapeChar"    = "\\"
+)  
+STORED AS TEXTFILE;
+						
+DEFAULT_ESCAPE_CHARACTER \
+DEFAULT_QUOTE_CHARACTER  "
+DEFAULT_SEPARATOR        ,
+
+============================================================================================================================================================================================================================
+JOINS 
+-----
+
+*** Join is a clause that combines the records of two tables 
+*** Assume that we have two tables A and B. When we perform join operation on them, it will return the records which are the combination of all columns o f A and B.
+
+
+create table student_details(id int,name string,age int,location string) row format delimited fields terminated by ‘,’ lines terminated by ‘\n’;
+
+load data local inpath ‘/home/hduser/student_details’ into table student_details;
+
+create table student_marks(c_id int,subject1 int,subject2 int.subject3 int,subject4 int,subject5 int,subject6 int) row format delimited fields terminated by ‘,’ lines terminated by ‘\n’;
+
+select sd.id , sd.anme , sm.subject1,sm.subject2,sm.subject3,sm.subject4,sm.subject5
+from srudent_details sd inner join student_marks sm 
+on sd.id = sm.c_id 
+ 
+select sd.id , sd.anme , sm.subject1,sm.subject2,sm.subject3,sm.subject4,sm.subject5
+from srudent_details sd left outer  join student_marks sm 
+on sd.id = sm.c_id 
+
+select sd.id , sd.anme , sm.subject1,sm.subject2,sm.subject3,sm.subject4,sm.subject5
+from srudent_details sd full outer  join student_marks sm 
+on sd.id = sm.c_id 
+
+map Side Join 
+---------------
+
+
+Map-side Join is your best bet when one of the tables is small enough to fit in memory to complete the job in a short span of time.
+In Real-time environment, you will be have data-sets with huge amount of data. So performing analysis and retrieving the data will be time consuming if one of the data-sets is of a smaller size. 
+In such cases Map-side join will help to complete the job in less time
+
+Map-side join has reduced the cost that is incurred for sorting and merging in the shuffle and reduce stages 
+Map-side join also helps in improving the performance of the task by decreasing the time to finish the task.
+
+
+ it is not suitable to perform map-side join on the tables which are huge data in both of them.
+ 
+ In Normal Join Operations , when we apply the join operations it will be assigned to the Mapreduce task which has two srages 
+		stage 1) map => mapper job is to read all the data from the join tables  and return the join key and join value pair into an intermediated file.
+				Further in the Shuffle Stage , this intermediate file is then sorted and merged 
+		stage 2) reduce => reducer will take this intermediate input and completed the task of join 
+		
+		
+In Map Side Join , When we submit the maoreduce job 
+	A map redice lacal job will be created before the original map reduce task , this task will read the data of the small table from HDFS and store it into a in-memory hash table.
+	after reading, it serializes the in-memory hash table into hashfile . 
+
+when the original Map reduce 	task begins , this hash file data will be moved to the hadoop distributed cache , which populates these files to each mappers local disk .
+so all the mapper can load this hash file into the memory and do the join work as before .
+If multiple mapper are running in a single machine then distributed cache needs to copy the data only one time to the machine 
+ 
+	
+
+we are having employee table and a smaller dept table 
+
+map side Join  Query 
+	SELECT /*+ MAPJOIN(DEPT) */ EMP.NAME , DEPT.DEPT_NAME 
+	FROM EMPLOYEE EMP JOIN DEPARTMENT DEPT 
+	ON EMP.DEPT_ID = DEPT.ID 
+
+
+	Another (better, in my opinion) way to turn on mapjoins is to let Hive do it automatically. 
+	Simply set hive.auto.convert.join to true in your config, and Hive will automatically use mapjoins for any tables smaller than 
+		hive.mapjoin.smalltable.filesize (default is 25MB).
+	
+	
+NOTE : REFER THIS URL FOR BETTER UNDERSTANDING 
+https://www.edureka.co/blog/map-side-join-vs-join/
+=========================================================================================================================================================================================================================================
+Map Join in Hive
+
+Map join is a Hive feature that is used to speed up Hive queries. It lets a table to be loaded into memory so that a join could be performed within a mapper without using a Map/Reduce step. If queries frequently depend on small table joins, using map joins speed up queries’ execution. Map join is a type of join where a smaller table is loaded in memory and the join is done in the map phase of the MapReduce job. As no reducers are necessary, map joins are way faster than the regular joins.
+
+Only hive.auto.convert.join is a map join option that must be set to true while other options are optional and have default values. So, it is not necessary to change the default values.
+
+Here are the Hive map join options:
+
+hive.auto.convert.join: Set this option to true. Once this option is set to true, during joins, when a table with a size less than 25 MB (hive.mapjoin.smalltable.filesize) is found, the joins are converted to map-based joins.
+hive.auto.convert.join.noconditionaltask: When three or more tables are involved in the join condition. Using hive.auto.convert.join, Hive generates three or more map-side joins with an assumption that all tables are of smaller size. Using
+hive.auto.convert.join.noconditionaltask, you can combine three or more map-side joins into a single map-side join if size of n-1 table is less than 10 MB. (This rule is defined by hive.auto.convert.join.noconditionaltask.size.)
+Bucket Join
+
+In bucketing, the data at storage level is distributed in buckets. Each bucket is expected to hold certain rows based on the bucketing key/column.
+
+As an example, lets say there are two tables user and user_visits and both table data is bucketed using user_id in 4 buckets . It means bucket 1 of user will contain rows with same user ids as that of bucket 1 of user_visits. And if a join is performed on these two tables on user_id columns, if it is possible to send bucket 1 of both tables to same mapper then good amount of optimization can be achived. This is exactly done in bucketed map join.
+
+Prerequisites for bucket map join:
+
+Tables being joined are bucketized on the join columns,
+The number of buckets in one table is a multiple of the number of buckets in the other table, the buckets can be joined with each other
+If the tables being joined are bucketized on the join columns, and the number of buckets in one table is a multiple of the number of buckets in the other table, the buckets can be joined with each other. If table A has 4 buckets and table B has 4 buckets, the following join
+
+SELECT /*+ MAPJOIN(b) */ a.key, a.valueFROM a JOIN b ON a.key = b.key 
+
+can be done on the mapper only. Instead of fetching B completely for each mapper of A, only the required buckets are fetched. For the query above, the mapper processing bucket 1 for A will only fetch bucket 1 of B. It is not the default behavior, and is governed by the following parameter
+
+set hive.optimize.bucketmapjoin = true
+
+If the tables being joined are sorted and bucketized on the join columns, and they have the same number of buckets, a sort-merge join can be performed. The corresponding buckets are joined with each other at the mapper. If both A and B have 4 buckets,
+
+SELECT /*+ MAPJOIN(b) */ a.key, a.valueFROM A a JOIN B b ON a.key = b.key 
+
+can be done on the mapper only. The mapper for the bucket for A will traverse the corresponding bucket for B. This is not the default behavior, and the following parameters need to be set:
+
+set hive.input.format=org.apache.hadoop.hive.ql.io.BucketizedHiveInputFormat;
+
+set hive.optimize.bucketmapjoin = true;
+
+set hive.optimize.bucketmapjoin.sortedmerge = true;
+	
+==========================================================================================================================================================================================================================
+SubQueries
+-----------
+A Query present within a Query is known as a sub query. The main query will depend on the values returned by the subqueries.
+
+Subqueries can be classified into two types
+
+Subqueries in FROM clause
+Subqueries in WHERE clause
+
+Syntax
+
+Subquery in FROM clause
+SELECT <column names 1, 2…n>From (SubQuery) <TableName_Main >
+Subquery in WHERE clause
+SELECT <column names 1, 2…n> From<TableName_Main>WHERE col1 IN (SubQuery);
+
+
+
+=====================================================================================================================================================================================================================================
+Windowing Function in Hive 
+-------------------------
+
+lag(a, 1) will fetch the previous value while lag(a, 2) will fetch the previous to previous value.
+if the data is not avilable it will be returned as NULL if we dont want thet we have to give it like lag(a,1,0)
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+comparison-of-storage-formats-in-hive
+
+FILE FORMAT	HDFS SIZE	MapReduce Total cumulative CPU time for Select count(*)
+TEXTFILE	12.02 GB	349 seconds
+ORC with NONE compression	2.53 GB	81 seconds
+ORC with ZLIB compression	1.19 GB	69 seconds
+ORC with SNAPPY compression	1.63 GB	75 seconds
+PARQUET	1.73 GB	116 seconds
+PARQUET with GZIP compression	1.25 GB	104 seconds
+-------------------------------------------------
+Sampling 
+Sampling is concerned with the selection of a subset of data from a large dataset to run queries and verify results. The dataset may be too large to run queries on the whole data. 
+Therefore in development and testing phases it is a good idea to run queries on a sample of dataset.
+
+Sampling by Bucketing
+ TABLESAMPLE (BUCKET x OUT OF y [ON colname])
+ If the table is not bucketed on the column(s) used in sampling, TABLESAMPLE will scan the entire table and fetch the sample
+ 
+select * from Employee TABLESAMPLE(BUCKET 1 OUT OF 5);
+select * from Employee TABLESAMPLE(BUCKET 1 OUT OF 5 ON ID);
+
+Running Sampling Queries on Table non-Bucketing column(s)
+select * from Employee TABLESAMPLE(BUCKET 2 OUT OF 5 ON AGE);
+
+We can run sampling on Hive Tables 
+
+select * from Employee TABLESAMPLE(20 PERCENT);
+select * from Employee TABLESAMPLE(2 ROWS);
+
+==================================================================================================================================================================
+Optimization Tech 
+-----------------
+
+1) if u join two tables and one table is small and another one is big we need to use map side join 
+		set hive.auto.convert.join=true
+2)Order by use one reducer where as sortby uses multiple reducer so if u use large amount of data use sortby rather than orderby 
+
+3) To increse the Parallelism use the below command 
+		set hive.exec.compress.output= true
+		set mapred.max.split.size=25600000;
+		set mapred.output.compression.type=BLOCK
+		set mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec
+
+4) To decrese the Burden on namenode 
+
+	add these to the property 
+	<name>mapred.compress.map.output</name>
+	<value>true</value>
+	
+5) SMB Join ==> Sort Merge Bucket Join is faster than the Map Join but it's used when u have sorted and bucketed the table 
+
+set hive.auto.convert.sortmerge.join = true
+set hive.optimize.bucketmapjoin=true
+set hive.optimize.bucketmapjoin.sortedmerge = true
+
+6) use skewed Table 
+
+7) vectorization 
+		it will improve the query Performance it combines multiple rows instead of single row  each time use given code to enable it 
+		
+		set hive.vectorized.execution.enabled =true ;
+		set hive.vectorized.execution.reduce.enabled =true;
+
+8) ORC hive table will improve the performance . SNAPPY is the best compression technique use it with ORC 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

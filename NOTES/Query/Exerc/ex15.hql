@@ -1,0 +1,43 @@
+set hive.exec.partition=true;
+set hive.exec.partition.mode=nonstrict;
+set hive.exec.partition.per.node=1000;
+CREATE DATABASE IF NOT EXISTS esakraw WITH DBPROPERTIES('OWNER'='ESAKKIPILLAI','PURPOSE'='LEARN');
+USE esakraw;
+CREATE TABLE IF NOT EXISTS esakraw.USERRECORDS_bk (
+FirstName STRING ,
+LastName STRING,
+CompanyName STRING,
+Address STRING,
+City STRING , 
+Post BIGINT,
+Phone ARRAY<STRING>,
+Email MAP<STRING,STRING> ,
+WebUrl STRING,
+State STRING 
+)
+COMMENT 'First Sample Table For DataType Examples'
+PARTITIONED BY COUNTRY STRING
+CLUSTERED BY State SORTED BY (City) INTO 32 BUCKETS
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+MAP COLLECTION TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+--LOADING DATA FROM LOCAL 
+INSERT OVERWRITE TABLE esakraw.USERRECORDS 
+PARTITION (COUNTRY)
+SELECT 
+FirstName, 
+LastName, 
+CompanyName,
+Address,
+City, 
+Post, 
+Phone, 
+Email ,
+WebUrl, 
+State ,
+COUNTRY
+FROM esakraw.USERRECORDS;
+
+
