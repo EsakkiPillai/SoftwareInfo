@@ -1,0 +1,700 @@
+CREATING THE DATABASE 
+
+CREATE DATABASE esakraw WITH DBPROPERTIES("USER"="ESAKKIPILLAI","CREATEDDATE"="10/13/2017");
+
+CREATE DATABASE esakraw_BKP LOCATION '/user/esakkipillai/hadoop/hive' WITH DBPROPERTIES("USER"="ESAKKIPILLAI","CREATEDDATE"="10/13/2017");
+create database esakuser;
+create database esaktmp location '/user/esakkipillai/hadoop/hive/temp' with dbproperties('user'='esak','reason'='Backupdb for esakraw');
+
+DEscribe database 
+
+hive (default)> describe database esaktmp;
+esaktmp         hdfs://nn01.itversity.com:8020/user/esakkipillai/hadoop/hive/temp       esakkipillai    USER
+
+hive (default)> describe database extended  esakraw_bkp;
+esakraw_bkp             hdfs://nn01.itversity.com:8020/user/esakkipillai/hadoop/hive    esakkipillai    USER    {USER=ESAKKIPILLAI, CREATEDDATE=10/13/2017}
+
+Alter the Database
+
+hive (default)> alter database esaktmp set dbproperties('owner'='ek');
+hive (default)> describe database extended esaktmp;
+esaktmp         hdfs://nn01.itversity.com:8020/user/esakkipillai/hadoop/hive/temp       esakkipillai    USER    {owner=ek, reason=Backupdb for esakraw, user=esak}
+
+Drop the database 
+hive (default)> drop database esaktmp;
+
+"Create a Simple Hive esakraw.userRecords table for the below specified Records  , Create the table using .hql File 
+(C:\Users\1532894\Documents\Spark\Hive\Data\User_Records.txt)
+"
+
+Rebbecca,Didio,Brandt Jonathan F Esq,171	E 24th St,AU,Leith,TA,7315,03-8174-9123	0458-665-290	0427-885-282,email:rebbecca.didio@didio.com.au,http://www.brandtjonathanfesq.com.au
+
+create table esakraw.userrecords(
+fname VARCHAR(64) ,
+lname VARCHAR(64) ,
+company VARCHAR(64) ,
+address STRUCT<ZIP:STRING , street:STRING> ,
+country  VARCHAR(64) ,
+city VARCHAR(64) ,
+state VARCHAR(64) ,
+post  INT,
+phoneno ARRAY<STRING> ,
+email MAP<STRING,STRING> ,
+web VARCHAR(64) 
+)
+COMMENT 'USERRECORDS TABLE WILL HAVE THE ABOVE COLUMNS AND ITS FOR SAMPLE PURPOSE'
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '\t'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '/home/esakkipillai/hadoop/hive/data' INTO TABLE esakraw.userrecords;
+
+hdfs dfs -put '/home/esakkipillai/hadoop/hive/data/userrecords.txt'  '/user/esakkipillai/hadoop/hive/data'
+CREATE EXTERNAL TABLE esakraw.userrecords_ext(
+fname VARCHAR(64) ,
+lname VARCHAR(64) ,
+company VARCHAR(64) ,
+address STRUCT<ZIP:STRING , street:STRING> ,
+country  VARCHAR(64) ,
+city VARCHAR(64) ,
+state VARCHAR(64) ,
+post  INT,
+phoneno ARRAY<STRING> ,
+email MAP<STRING,STRING> ,
+web VARCHAR(64) 
+)
+COMMENT 'THIS IS A SAMPLE FOR EXTERNAL TABLE'
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '\t'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '/user/esakkipillai/hadoop/hive/data';
+
+
+LOAD DATA INPATH '/user/esakkipillai/hadoop/hive/data' OVERWRITE TABLE  esakraw.userrecords_ext;
+
+
+CREATE TABLE esakraw.userrecords_cats like esakraw.userrecords_ext;
+INSERT OVERWRITE INTO TABLE esakraw.userrecords_cats
+SELECT * FROM esakraw.userrecords_ext;
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS esakraw.userrecords_ext_ORC(
+fname VARCHAR(64) ,
+lname VARCHAR(64) ,
+company VARCHAR(64) ,
+address STRUCT<ZIP:STRING , street:STRING> ,
+country  VARCHAR(64) ,
+city VARCHAR(64) ,
+state VARCHAR(64) ,
+post  INT,
+phoneno ARRAY<STRING> ,
+email MAP<STRING,STRING> ,
+web VARCHAR(64) 
+)
+COMMENT 'THIS IS AN EXAMPLE FOR ORC TABLE WITH SNAPPY COMPRESSION'
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '\t'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS ORC
+LOCATION '/user/esakkipillai/hadoop/hive/data_orc'
+TBLPROPERTIES('orc.compress'='ZLIB');
+
+INSERT INTO TABLE esakraw.userrecords_ext_ORC 
+SELECT * FROM esakraw.userrecords_ext;
+
+
+create TEMPORARY table IF NOT EXISTS esakraw.temp(
+fname STRING,
+mark ARRAY<INT>
+)
+COMMENT 'TEMP TABLE and mark will accept 5 values';
+INSERT INTO  TABLE esakraw.temp SELECT "esakki",array(55,66,77,88,99) from (select '123') x;
+INSERT INTO TABLE esakraw.temp SELECT "Arun",ARRAY(85,86,87,88,89) from (select '123') x;
+INSERT INTO TABLE esakraw.temp SELECT "Rocky",ARRAY(95,96,77,98,99) from (select '123') x;
+INSERT INTO TABLE esakraw.temp SELECT "ganesh",ARRAY(95,96,77,88,99) from (select '123') x;
+INSERT INTO TABLE esakraw.temp SELECT "Vignesh",ARRAY(45,56,57,88,99) from (select '123') x;
+INSERT INTO TABLE esakraw.temp SELECT "Pradeep",ARRAY(85,86,77,48,59) from (select '123') x;
+DESCRIBE FORMATTED esakraw.temp;
+select * from esakraw.temp;
+
+
+12345|John,Smith|123 Main St,New York, NY,00000|45,40,17,13|weekly_update:true,special_clearance:true,birthday_greeting:false
+
+CREATE TABLE IF NOT EXISTS esakraw.delimtable(
+slno BIGINT,
+name ARRAY<STRING>,
+address STRUCT<street:STRING,CITY:STRING,CODE:STRING,ZIP:STRING>,
+mark ARRAY<INT> ,
+updates MAP<STRING,BOOLEAN>
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '|'
+COLLECTION ITEMS TERMINATED BY ','
+MAP KEYS TERMINATED BY ':'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '/home/esakkipillai/hadoop/hive/data/sample.txt' OVERWRITE INTO TABLE esakraw.delimtable;
+
+retrieve the data 
+hive (esakraw)> select slno,name[0],name[1],address.street,address.zip,mark,updates["weekly_updates"], updates['special_clearance'], updates['birthday_greeting'] from esakraw.delimtable;
+
+
+CREATE TABLE IF NOT EXISTS ${hiveconf:TABLE_NAME}(
+slno BIGINT,
+name ARRAY<STRING>,
+address STRUCT<street:STRING,CITY:STRING,CODE:STRING,ZIP:STRING>,
+mark ARRAY<INT> ,
+updates MAP<STRING,BOOLEAN>
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '|'
+COLLECTION ITEMS TERMINATED BY ','
+MAP KEYS TERMINATED BY ':'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '/home/esakkipillai/hadoop/hive/data/sample.txt' OVERWRITE INTO TABLE esakraw.delimtable;
+
+
+hive -f <scriptname> -hiveconf TABLE_NAME='esakraw.newDelim'
+
+-------------------------------------------------------------------------
+
+hive (esakraw)> set hive.exec.dynamic.partition;
+hive.exec.dynamic.partition=true
+hive (esakraw)> set hive.exec.dynamic.partition.mode;
+hive.exec.dynamic.partition.mode=strict
+hive (esakraw)> set hive.exec.dynamic.partition.mode=nonstrict;
+hive (esakraw)> set hive.exec.dynamic.partition.mode;
+hive.exec.dynamic.partition.mode=nonstrict
+hive (esakraw)> set hive.exec.max.dynamic.partitions
+hive.exec.max.dynamic.partitions           hive.exec.max.dynamic.partitions.pernode   
+hive (esakraw)> set hive.exec.max.dynamic.partitions.pernode=1000;
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS esakraw.userrecords_part(
+fname VARCHAR(64) ,
+lname VARCHAR(64) ,
+company VARCHAR(64) ,
+address STRUCT<ZIP:STRING , street:STRING> ,
+city VARCHAR(64) ,
+post  INT,
+phoneno ARRAY<STRING> ,
+email MAP<STRING,STRING> ,
+web VARCHAR(64) ,
+state VARCHAR(64) 
+)
+COMMENT 'THIS IS A SAMPLE FOR EXTERNAL TABLE'
+PARTITIONED BY ( country  VARCHAR(64)  )
+CLUSTERED BY (state) SORTED BY (fname ) INTo 32 BUCKETS
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '\t'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS SEQUENCEFILE
+LOCATION '/user/esakkipillai/hadoop/hive/dynamic_seq';
+
+INSERT OVERWRITE TABLE esakraw.userrecords_part_orc
+PARTITION (country)
+SELECT 
+fname ,
+lname ,
+company,  
+address ,
+city ,
+post  ,
+phoneno ,
+email ,
+web ,
+state ,
+country
+FROM esakraw.userrecords_ext;
+
+
+
+hdfs dfs -put '/home/esakkipillai/hadoop/hive/data/userrecords.txt'  '/user/esakkipillai/hadoop/hive/dataseq'
+
+CREATE EXTERNAL TABLE IF NOT EXISTS esakraw.userrecords_part_orc(
+fname VARCHAR(64) ,
+lname VARCHAR(64) ,
+company VARCHAR(64) ,
+address STRUCT<ZIP:STRING , street:STRING> ,
+city VARCHAR(64) ,
+post  INT,
+phoneno ARRAY<STRING> ,
+email MAP<STRING,STRING> ,
+web VARCHAR(64) ,
+state VARCHAR(64) 
+)
+COMMENT 'THIS IS A SAMPLE FOR EXTERNAL TABLE'
+PARTITIONED BY ( country  VARCHAR(64)  )
+CLUSTERED BY (state) SORTED BY (fname ) INTo 32 BUCKETS
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '\t'
+MAP KEYS TERMINATED BY ':'
+LINES TERMINATED BY '\n'
+STORED AS ORC
+LOCATION '/user/esakkipillai/hadoop/hive/dynamic_orc'
+TBLPROPERTIES('orc.compress'='ZLIB');
+
+
+ALTER TABLE 
+hive (esakraw)> alter table newdelim rename to newdelim1;
+OK
+Time taken: 0.434 seconds
+hive (esakraw)> alter table newdelim1 set TBLPROPERTIES('USR'='EK');
+OK
+Time taken: 0.427 seconds
+
+
+
+CREATE EXTERNAL TABLE esakraw.ORDERS_RAW (
+order_id INT ,
+order_date STRING ,
+order_customer_id INT ,
+order_status STRING
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '/user/esakkipillai/hadoop/hive/newdata/orders/';
+
+LOAD DATA INPATH '/user/esakkipillai/hadoop/hive/newdata/orders/ek/part-m-00000' OVERWRITE INTO TABLE esakraw.ORDERS_RAW;
+
+
+
+
+create view if not exists esakraw.orders_completed(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING COMPLETED RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"COMPLETED" from esakraw.orders_raw where order_status='COMPLETED';
+
+
+create view if not exists esakraw.orders_PENDING(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING PENDING RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"PENDING" from esakraw.orders_raw where order_status='PENDING';
+
+
+
+create view if not exists esakraw.orders_CLOSED(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING PENDING RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"CLOSED" from esakraw.orders_raw where order_status='CLOSED';
+
+create view if not exists esakraw.orders_CANCELED(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING CANCELED RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"CANCELED" from esakraw.orders_raw where order_status='CANCELED';
+
+create view if not exists esakraw.orders_ON_HOLD(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING ON_HOLD RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"ON_HOLD" from esakraw.orders_raw where order_status='ON_HOLD';
+
+create view if not exists esakraw.orders_PAYMENT_REVIEW(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING PAYMENT_REVIEW RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"PAYMENT_REVIEW" from esakraw.orders_raw where order_status='PAYMENT_REVIEW';
+
+create view if not exists esakraw.orders_PENDING_PAYMENT(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING PENDING_PAYMENT RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"PENDING_PAYMENT" from esakraw.orders_raw where order_status='PENDING_PAYMENT';
+
+create view if not exists esakraw.orders_PROCESSING(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING PROCESSING RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"PROCESSING" from esakraw.orders_raw where order_status='PROCESSING';
+
+create view if not exists esakraw.orders_SUSPECTED_FRAUD(
+order_id,order_date,order_customer_id, STATUS )
+COMMENT 'THIS VIEW IS ONLY HAVING SUSPECTED_FRAUD RECORDS'
+AS SELECT order_id,order_date,order_customer_id,"SUSPECTED_FRAUD" from esakraw.orders_raw where order_status='SUSPECTED_FRAUD';
+
+CANCELED
+CLOSED
+COMPLETE
+ON_HOLD
+PAYMENT_REVIEW
+PENDING
+PENDING_PAYMENT
+PROCESSING
+SUSPECTED_FRAUD
+
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.max.dynamic.partitions.pernode=1000;
+SET hive.enforce.bucketing =true;
+
+CREATE TABLE esakraw.summerolympicsraw(
+City STRING,
+Sport STRING,
+Discipline STRING,
+Athlete STRING,
+Country STRING,
+Gender STRING ,
+Event STRING,
+Medal STRING
+)
+COMMENT 'STG TABLE'
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA LOCAL INPATH '/home/esakkipillai/hadoop/hive/olympics/data.csv' OVERWRITE  INTO TABLE esakraw.summerolympicsraw;
+
+create EXTERNAL TABLE IF NOT EXISTS  esakraw.olympics_s1(
+Discipline STRING,
+Athlete STRING,
+Country STRING,
+Event STRING,
+Medal STRING,
+City STRING
+)
+COMMENT 'SAMPLE OLYMPICS DATA'
+PARTITIONED BY (Gender STRING , Sport STRING)
+CLUSTERED BY (City ) SORTED BY (City) into 16 BUCKETS 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+
+INSERT OVERWRITE TABLE esakraw.olympics_s1 PARTITION (Gender,Sport)
+SELECT  Discipline,Athlete,Country,Event,Medal,City,Gender,Sport FROM esakraw.summerolympicsraw;
+
+
+ALTER TABLE esakraw.olympics_s1 PARTITION (gender='Men',sport='Wrestling') CONCATENATE;
+
+CREATE TABLE IF NOT EXISTS esakraw.olympics_txn(
+Discipline STRING,
+Athlete STRING,
+Country STRING,
+Event STRING,
+Medal STRING,
+City STRING
+)
+COMMENT 'SAMPLE OLYMPICS DATA with ORC and ZLIB'
+PARTITIONED BY (Gender STRING , Sport STRING)
+CLUSTERED BY (City ) into 16 BUCKETS 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS ORC
+TBLPROPERTIES('orc.compress'='zlib','auto.purge'='true','transactional'='true');
+
+Transactional Satement In Hive 
+
+ set hive.support.concurrency =true;
+ set hive.enforce.bucketing=true;
+ set hive.exec.dynamic.partition.mode=nonstrict;
+ set hive.exec.max.dynamci.partitions.pernode=1000;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+ set hive.compactor.initiator.on=true;
+ set hive.compactor.worker.threads=1;
+ 
+ 
+CREATE TABLE IF NOT EXISTS esakraw.olympics_txmplx(
+Discipline STRING,
+Athlete STRING,
+Country STRING,
+Event STRING,
+Medal STRING,
+City STRING
+)
+COMMENT 'SAMPLE OLYMPICS DATA with ORC and ZLIB'
+PARTITIONED BY (Gender STRING , Sport STRING)
+CLUSTERED BY (City ) into 16 BUCKETS 
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+STORED AS ORC
+TBLPROPERTIES('transactional'='true');
+
+INSERT INTO TABLE esakraw.olympics_txmplx PARTITION (Gender,Sport)
+SELECT  Discipline,Athlete,Country,Event,Medal,City,Gender,Sport FROM esakraw.summerolympicsraw;
+
+select * from esakraw.olympics_txmplx 
+where Gender='Men'
+and Sport='Wrestling' and Country='USA';
+
+UPDATE 
+UPDATE esakraw.olympics_txmplx
+SET Country='America Karan'
+where Country='USA'
+
+
+SELECT * FROM  esakraw.olympics_txmplx 
+where Gender='Men' and Sport='Wrestling' AND Country='America Karan'
+INSERT 
+
+INSERT INTO TABLE esakraw.olympics_txmplx
+PARTITION(Gender='Men',Sport='Wrestling')
+VALUES ('PANDI','ATHi','IND','SPARKS','GOLD','CHENNAI')
+INSERT INTO TABLE esakraw.olympics_txmplx
+PARTITION(Gender='Men',Sport='Wrestling')
+VALUES ('PANDI_CPY','ATHi','IND','SPARKS','GOLD','CHENNAI')
+
+SELECT * FROM  esakraw.olympics_txmplx 
+where Gender='Men' and Sport='Wrestling' AND Country='IND'
+
+
+DELETE FROM esakraw.olympics_txmplx
+where Gender='Men' and Sport='Wrestling' and Discipline='PANDI_CPY';
+------------------------------------------------------------------------------------
+
+select * from esakraw.olympics_s1 TABLESAMPLE(BUCKET 16 OUT OF 16 ON City);
+select * from esakraw.olympics_s1 TABLESAMPLE(BUCKET 1 OUT OF 16 ON City);
+
+---------------------------------------------------------------------------------
+Functions 
+
+
+Mathematical Functions 
+
+round()
+pow()
+concat()
+concat_ws(sep,a,b,c) with custome seperator
+in_file(string str, string filename)  Returns true if the string str appears as an entire line in filename.
+instr(string str, string substr)  Returns the position of the first occurence of substr in str
+length(string A) Returns the length of the string
+regexp_extract(string subject, string pattern, int index) Returns the string extracted using the pattern. e.g. regexp_extract(‘foothebar’, ‘foo(.*?)(bar)’, 2) returns ‘bar.’ Note that some care is necessary in using predefined character classes: using ‘\s’ as the second argument will match the letter s; ‘s’ is necessary to match whitespace, etc. The ‘index’ parameter is the Java regex Matcher group() method index. See docs/api/java/util/regex/Matcher.html for more information on the ‘index’ or Java regex group() method.
+repeat(String,n)  Repeat str n times
+reverse(string A)	Returns the reversed string
+rtrim(string A)	Returns the string resulting from trimming spaces from the end(right hand side) of A e.g. rtrim(‘ foobar ‘) results in ‘ foobar’
+split(string str, string pat)	Split str around pat (pat is a regular expression)
+substr(string|binary A, int start) substring(string|binary A, int start)	Returns the substring or slice of the byte array of A starting from start position till the end of string A e.g. substr(‘foobar’, 4) results in ‘bar’
+translate(string input, string from, string to)	Translates the input string by replacing the characters present in the from string with the corresponding characters in the to string. This is similar to the translatefunction in PostgreSQL. If any of the parameters to this UDF are NULL, the result is NULL as well (available as of Hive 0.10.0)
+trim(string A)	Returns the string resulting from trimming spaces from both ends of A e.g. trim(‘ foobar ‘) results in ‘foobar’
+upper(string A) ucase(string A)	Returns the string resulting from converting all characters of A to upper case e.g. upper(‘fOoBaR’) results in ‘FOOBAR’
+=================================================================================================================================================================================================================================================================================================================================================================================================
+
+
+orders_all_f		
+order_id		
+		order_date	cast to date Column 	 cast( order_date as date)
+		order_customer_id		
+		order_status		
+		order_status_code	use case and derive p PA CL	
+		orderdate_month		
+		orderdate_day		
+		orderdate_year		
+		Juliandate	from jan1	
+		currentday	from that month day	
+		Endday		
+		userdate	change to DD-MM-YY	
+		SystemDate		
+		systemtimestamp		
+		evenOrder_ID		
+		Odd_Order_ID		
+		orderid_code	E/O	
+		
+		
+		
+CREATE TABLE esakraw.Orders_all_f (
+order_id INT,
+order_date DATE,
+order_status STRING,
+order_status_code VARCHAR(8),
+orderdate_month INT,
+orderdate_day INT,
+orderdate_year INT,
+currentday DATE,
+juliandate INT,
+Endday DATE,
+userdate DATE,
+ordersincedate DATE,
+ext_date DATE,
+evenorderid INT,
+oddorderid INT,
+orderid_code VARCHAR(4)
+)
+
+INSERT INTO TABLE esakraw.Orders_all_f
+SELECT 
+order_id,
+TO_DATE(from_unixtime(UNIX_TIMESTAMP(order_date))),
+order_status,
+CASE 
+WHEN orders_raw.order_status='CANCELED' THEN 'CA'
+WHEN orders_raw.order_status='CLOSED'   THEN 'CL'
+WHEN orders_raw.order_status='COMPLETE' THEN 'CP'
+WHEN orders_raw.order_status='ON_HOLD'  THEN 'OH'
+WHEN orders_raw.order_status='PAYMENT_REVIEW' THEN 'PR'
+WHEN orders_raw.order_status='PENDING' THEN 'P'
+WHEN orders_raw.order_status='PENDING_PAYMENT' THEN 'PP'
+WHEN orders_raw.order_status='PROCESSING'  THEN 'PRO'
+WHEN orders_raw.order_status='SUSPECTED_FRAUD' THEN 'SF'
+END, 
+cast(month(order_date) as INT),
+cast(day(order_date) as INT),
+cast(year(order_date) as INT),
+CURRENT_DATE ,
+from_unixtime(unix_timestamp(order_date), 'DDD'),
+datediff ( current_date ,last_day(order_date))	 ,
+from_unixtime(unix_timestamp(last_day(order_date),'yyyy-mm-dd')),
+CURRENT_DATE,
+CASE WHEN orders_raw.order_customer_id % 2 == 0 THEN order_raw.order_customer_id ELSE 0 END ,
+CASE WHEN orders_raw.order_customer_id % 2 != 0 THEN order_raw.order_cutomer_id ELSE 0 END ,
+CASE WHEN orders_raw.order_customer_id % 2 == 0 THEN 'E' ELSE 'O' END 
+FROM esakraw.orders_raw
+LIMIT 10;
+
+sqoop import --connect jdbc:mysql://nn01.itversity.com/retail_db --username retail_dba --password itversity --table products --hive-import --create-hive-table  --hive-overwrite --hive-database esakraw --hive-table products_raw --target-dir /user/esakkipillai/hadoop/hive/products -m 1
+select 
+order_date , datediff ( current_date ,last_day(order_date)) ,from_unixtime(unix_timestamp(last_day(order_date),'yyyy-mm-dd'))
+FROM esakraw.orders_raw
+LIMIT 10;
+
+product_id          
+product_category_id 
+product_name        
+Product Name Length 
+product_description 
+product_price       
+Proce_Range
+GST
+New Price 
+product_image       
+Product_url_s1
+Product_url_s2
+Product_url
+product_url_code
+
+
+SELECT 
+product_id ,
+product_category_id ,
+product_name ,
+length(product_name),
+product_description ,
+product_price ,
+CASE WHEN PRODUCTS_PRICE < 50 THEN 'CHEAPER' END
+CASE WHEN PRODUCTS_PRICE > 50  and PRODUCTS_PRICE < 500 THEN 'OKAY' END
+CASE WHEN PRODUCTS_PRICE > 500 and PRODUCTS_PRICE < 1000 THEN 'HIGH' END
+CASE WHEN PRODUCTS_PRICE > 1000 THEN 'LUXURY' END ,
+CASE WHEN PRODUCTS_PRICE < 50 THEN 5 END
+CASE WHEN PRODUCTS_PRICE > 50  and PRODUCTS_PRICE < 500 THEN 10 END
+CASE WHEN PRODUCTS_PRICE > 500 and PRODUCTS_PRICE < 1000 THEN 20 END
+CASE WHEN PRODUCTS_PRICE > 1000 THEN 30 END ,
+(PRODUCT_PRICE + ( (GST*.01)*PRODUCT_PRICE) ),
+PRODUCT_IMAGE,
+SPLIT(PRODUCT_IMAGE ,'//')[0],
+SPLIT(PRODUCT_IMAGE ,'//')[1],
+CONCAT_WS('@@@',SPLIT(PRODUCT_IMAGE ,'//')[0],SPLIT(PRODUCT_IMAGE ,'//')[1]),
+FROM PRODUCTS;
+
+Aggreage Table		
+product_category_id 
+Sum
+noof Products
+avg price
+min price
+Max price
+
+SELECT 
+PRODUCT_CATEGORY_ID,
+SUM(PROCE),
+COUNT(PRODUCT_CUSTOMER_ID),
+AVG(PRICE),
+MIN(PRICE),
+MAX(PRICE),
+FROM PRODUCTS
+GROUP BY PRODUCT_CATEGORY_ID;
+
+--------------------------------------------------------------------------------
+create table esakraw.stocks (
+dates String, 
+Ticker String, 
+Open Double, 
+High Double, 
+Low Double, 
+Close Double, 
+Volume_for_the_day int
+) 
+row format delimited 
+fields terminated by '\t'
+stored as textfile;
+
+LOAD DATA LOCAL INPATH '/home/esakkipillai/hadoop/hive/data/stock.csv' INTO TABLE stocks;
+
+
+
+
+date	Ticker	Open	High	Low	Close	Volume_for_the_day
+10/14/2017	a	123	123	44	123	2222
+10/15/2017	a	22	33	21	30	3333
+10/16/2017	a	11	55	11	15	4444
+10/17/2017	a	44	48	44	45	5555
+10/18/2017	a	332	556	150	200	6666
+10/19/2017	a	221	200	170	190	9999
+
+
+LAG Value 
+
+select dates,Ticker,close,lag(close,1) over(partition by ticker) as yesterdayprice from stocks 
+
+Here using lag we can display the yesterday’s closing price of the ticker. Lag is to be used with over function, inside the over function you can use partition or order by classes.
+
+we will find that whether the following day’s closing price is higher or lesser than today’s and that can be done as follows.
+
+select dates,
+Ticker,
+close,
+case lead(close,1) over(partition by ticker) - close)>0 when true THEN "higher" when false THEN  "lower" as Changes 
+from stocks 
+
+
+
+select 
+Ticker,
+first_value(High) over (partition by Ticker) as highvalue 
+from stocks;
+
+select dates,
+Ticker,
+last_value(High) over (partition by Ticker) as Last_highvalue 
+from stocks;
+
+select ticker , count(*) over(partition by ticker) as CNT 
+from stocks;
+
+let us take if you want to get running total of the volume_for_the_day for all the days for every ticker 
+then you can do this with the below query.
+
+select 
+ticker ,dates, Volume_for_the_day , sum(Volume_for_the_day) over(partition by ticker,dates) as runningtotal 
+from stocks;
+
+Finding the percentage of each row value
+
+MIN 
+MAX
+AVG
+1
+select ticker, avg(close) over(partition by ticker) as maximum from acadgild.stocks
+
+
+RANK 
+select ticker,close,rank() over(partition by ticker order by close) as closing from stocks
+
+DENSERANK 
+select ticker,close,dense_rank() over(partition by ticker order by close) as closing from stocks
+
+select ticker,close,row_number() over(partition by ticker order by close) as closing from stocks
+
+
+1
+select ticker,ntile(5) over(partition by ticker order by close ) as bucket from stocks
+

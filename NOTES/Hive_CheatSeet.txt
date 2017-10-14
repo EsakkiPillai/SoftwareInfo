@@ -1,0 +1,598 @@
+Hive
+
+SQL Based Datawarehouse app built on top of hadoop(select,join,groupby…..)
+
+It is a platform used to develop SQL type scripts to do MapReduce operations.
+
+PARTITIONING
+
+Partition tables changes how HIVE structures the data storage
+*Used for distributing load horizantally
+
+ex: PARTITIONED BY (country STRING, state STRING);
+A subset of a table’s data set where one column has the same value for all records in the subset.
+In Hive, as in most databases that support partitioning, each partition is stored in a physically separate location—in Hive’s case, in a subdirectory of the root directory for the table.
+Partitions have several advantages. The column value corresponding to a partition doesn’t have to be repeated
+in every record in the partition, saving space, and queries with WHERE clauses that restrict the result set to specific values for the partition columns can perform more quickly, because they avoid scanning the directories of non matching partition values.
+
+Partitioned by(country string,dept string)
+
+Limitations:
+A design that creates too many partitions is the large no of Hadoop files and directories that are created unnecessarily
+Too many partitions may optimize some quieries but be detrimental
+partitioned by(country string,state string);
+
+hive> select * from partitionemployees where country=’CANADA’;
+OK
+
+Dynamic ParttioningThis technique is convenient for
+partitioning a query result into a potentially large number of partitions in a new table, without having to write a separate query for each partition column value.
+SET hive.exec.dynamic.partition = true;
+2.
+SET hive.exec.dynamic.partition.mode = nonstrict
+
+BUCKETING
+
+IT is a technique for decomposing datasets into more manageable parts.
+if we bucket table and use column as the bucketing column, the value of this column will be hashed by a user-defined number into buckets. Records with the same column will always be stored in the same bucket.
+
+ 
+Sponsored Content
+ Watch the best of Hindi Movies by joining Prime at just Rs.499/year!
+Watch the best of Hindi Movies by joining Prime at just Rs.499/year!
+Amazon Prime Video
+ Internet Goes Gaga Over This Throwback Pic Of Saif & Amrita Singh, Turns It Into Funny Memes!
+Internet Goes Gaga Over This Throwback Pic Of Saif & Amrita Singh, Turns It Into Funny Memes!
+Entertainment
+ Here's The Tentative Contestant List For Bigg Boss 11 & It Has A Lot Of Interesting Names!
+Here's The Tentative Contestant List For Bigg Boss 11 & It Has A Lot Of Interesting Names!
+Entertainment
+ Agarkar: I will stick with Kayes
+Agarkar: I will stick with Kayes
+Cricinfo
+ Young Teen Disappears - 6 Months Later Best Friends Reveal Truth
+Young Teen Disappears - 6 Months Later Best Friends Reveal Truth
+True Activist
+ Where the World's Billionaires Live
+Where the World's Billionaires Live
+Mansion Global by Dow Jones
+Recommended by
+Decomposing datasets into more manageable parts while creating table clusteredby(uniqueid) into noof buckets No of buckets is fixed.
+If 2 tables are bucketed by empid hive can create a logically correct sampling.it is also used for effiecient map side joins
+
+External Partition Tables
+
+
+create external table if not exists customers.externalpartitionemployees(
+name String comment 'employee name'
+,salary float comment 'employee salary',
+subordinates Array<string> comment 'name of subordinates',
+deductions map<String,float> comment 'keys are deduction names values are percentages',
+address struct<street:String,city:String,state:string,zipcode:int> comment 'Home address')
+partitioned by(country string,universe string,galaxy string);
+alter table externalpartitionemployees add partition(country='US',universe='earth',galaxy='sun')
+location '/user/cloudera/usearthsun';
+
+load data local inpath '/home/cloudera/Desktop/externalpart' into table externalpartitionemployees partition(country='US',universe='earth',galaxy='sun');
+to archive data to s3 storage
+alter table externalpartitionemployees partition(country='US',universe='earth',galaxy='sun')
+set location '/user/cloudera/usearthsunarchive';
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+ 
+create external table if not exists customers.externalpartitionemployees(
+name String comment 'employee name'
+,salary float comment 'employee salary',
+subordinates Array<string> comment 'name of subordinates',
+deductions map<String,float> comment 'keys are deduction names values are percentages',
+address struct<street:String,city:String,state:string,zipcode:int> comment 'Home address')
+partitioned by(country string,universe string,galaxy string);
+alter table externalpartitionemployees add partition(country='US',universe='earth',galaxy='sun')
+location '/user/cloudera/usearthsun';
+ 
+load data local inpath '/home/cloudera/Desktop/externalpart' into table externalpartitionemployees partition(country='US',universe='earth',galaxy='sun');
+to archive data to s3 storage
+alter table externalpartitionemployees partition(country='US',universe='earth',galaxy='sun')
+set location '/user/cloudera/usearthsunarchive';
+FEATURES OF HIVE
+
+It stores schema in a database and processed data into HDFS.
+It is designed for OLAP.
+It provides SQL type language for querying called HiveQL or HQL.
+It is familiar, fast, scalable, and extensible.
+HIVE INTERFACES
+
+Hive interfaces include WEB UI,
+HIVE Command Line,
+HD Insight(Windows Server)
+TYPES OF TABLES in Hive
+
+External Table
+Internal Table(Mangaed Table)
+External Table
+A table using a storage location and contents that are outside of Hive’s control.
+It is convenient for sharing data with other tools,
+when an external table is created, Hive does not create the external directory (or directories for partitioned tables), nor are the directory and data files deleted when an external table is
+dropped.
+
+Data can be used outside of hive Hive cannot own control data.it delets only metadata Internal Tabe(or Manageable) Managed tables store their data inside the warehouse directory. Managed tables are less convenient for sharing with other tools. when you want full control over the table When u drp deletes data and schema in table Less convenient for sharing other tools.
+
+Collection Data types
+
+SRTUCT,MAP,ARRAY
+
+STRUCT
+STRUCT {first STRING; last STRING}, then
+the first name field can be referenced using name.first.
+struct(‘John’, ‘Doe’)
+
+arrays–similar data types–access by index
+map-key value pairs–access by column[“federal”]
+structs-different data types–access by dot
+MAP A collection of key-value tuples, where the fields are accessed
+using array notation (e.g., [‘key’]). For example, if a column
+name is of type MAP with key?value pairs
+‘first’?’John’ and ‘last’?’Doe’, then the last
+name can be referenced using name[‘last’].
+map(‘first’, ‘John’,’last’, ‘Doe’)
+
+ARRAY Ordered sequences of the same type that are indexable using zero-based integers. For example, if a column name is of type ARRAY of strings with the value [‘John’, ‘Doe’], then the second element can be referenced using name[1].
+
+
+CREATE TABLE employees (
+name STRING,
+salary FLOAT,
+subordinates ARRAY<STRING>,
+deductions MAP<STRING, FLOAT>,
+address STRUCT<street:STRING, city:STRING, state:STRING, zip:INT>);
+1
+2
+3
+4
+5
+6
+7
+ 
+CREATE TABLE employees (
+name STRING,
+salary FLOAT,
+subordinates ARRAY<STRING>,
+deductions MAP<STRING, FLOAT>,
+address STRUCT<street:STRING, city:STRING, state:STRING, zip:INT>);
+The name is a simple string and for most employees, a float is large enough for the
+
+Primitive data types
+
+Tinyint
+Smallint
+Int
+Bigint
+Boolean
+Float
+Double
+String
+Timestamp
+Binary
+Complex struct
+Map
+Array
+
+User Defined Aggregate Functions
+
+User-defined functions that take multiple rows (or columns from multiple rows) and return a single “aggregation" of the data, such as a count of the rows, a sum or average of number values, etc.
+
+User Defined Table generating Functions
+
+User-defined functions that take a column from a single record and expand it into multiple rows.
+Example includes converting a map into rows of key and value fields
+
+UDF
+
+Create new class extends udf Complie this class and add it to jar Put jar to hive classpath Register function
+
+Indexes
+
+For speedy access to columns in your database Create index <INDEX_NAME> on table <TABLE_NAME> as name
+Select * from <INDEX_NAME> where a = 1;
+
+objectinspector
+
+Hive uses ObjectInspector to analyze the internal structure of the row object and also the structure of the individual columns. ObjectInspector provides a uniform way to access complex objects that can be stored in
+multiple formats in the memory, including:
+• Instance of a Java class (Thrift or native Java)
+• A standard Java object (we use java.util.List to represent Struct and Array, and use
+java.util.Map to represent Map)
+• A lazily-initialized object (For example, a Struct of string fields stored in a single Java string object with starting offset for each field) A complex object can be represented by a pair of ObjectInspector and Java Object. The ObjectInspector not only tells us the structure of the Object, but also gives us ways to access
+the internal fields inside the Object.
+
+create table
+
+
+create table if not exists customers.employees(
+name String comment 'employee name'
+,salary float comment 'employee salary',
+subordinates Array<string> comment 'name of subordinates',
+deductions map<String,float> comment 'keys are deduction names values are percentages',
+address struct<street:String,city:String,state:string,zipcode:int> comment 'Home address')
+comment 'Description of the table'
+tblproperties('creator'='me','created at'='01-20-15 2:59:00');
+
+load data local inpath '/home/cloudera/Desktop/employees' into table customers.employees;
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+ 
+create table if not exists customers.employees(
+name String comment 'employee name'
+,salary float comment 'employee salary',
+subordinates Array<string> comment 'name of subordinates',
+deductions map<String,float> comment 'keys are deduction names values are percentages',
+address struct<street:String,city:String,state:string,zipcode:int> comment 'Home address')
+comment 'Description of the table'
+tblproperties('creator'='me','created at'='01-20-15 2:59:00');
+ 
+load data local inpath '/home/cloudera/Desktop/employees' into table customers.employees;
+Copy Schema
+
+create table if not exists customers.employeescopy like customers.employees;
+
+–schema will be copied
+
+SerDe
+
+The Serializer/Deserializer or SerDe for short is used to parse the bytes of a record into columns or fields, the deserialization process. It is also used to create those record bytes (i.e., serialization)
+
+Built-in SerDes
+Avro (Hive 0.9.1 and later)
+ORC (Hive 0.11 and later)
+RegEx
+Thrift
+Parquet (Hive 0.13 and later)
+CSV (Hive 0.14 and later)
+
+Serde is a library built on top of Hadoop API. Serializer, Deserializer instructs HIVE on how to process a record.
+HIVE enables semi-structured or unstructured records to be processed also.
+Serde will deseralize data from file to object so that it can be queried using SQL syntax.
+
+Hive currently use these SerDe classes to serialize and deserialize data:
+• MetadataTypedColumnsetSerDe: This SerDe is used to read/write delimited records like CSV, tab-separated control-A separated records (quote is not supported yet.)
+• ThriftSerDe: This SerDe is used to read/write thrift serialized objects. The class file for the Thrift object must be loaded first.
+• DynamicSerDe: This SerDe also read/write thrift serialized objects, but it understands thrift DDL so the schema of the object can be provided at runtime. Also it supports a lot of different protocols, including TBinaryProtocol, TJSONProtocol, TCTLSeparatedProtocol (which writes data in delimited records customserde
+
+In most cases, users want to write a Deserializer instead of a SerDe, because users just want to read their own data format instead of writing to it.
+•For example, the RegexDeserializer will deserialize the data using the configuration parameter ‘regex’, and possibly a list of column names
+•If your SerDe supports DDL (basically, SerDe with parameterized columns and column types), you probably want to implement a Protocol based on DynamicSerDe, instead of writing a SerDe from scratch. The reason is that the framework passes DDL to SerDe through
+
+Thrift
+
+An RPC(Remote Procedure Call) system integrated into Hive.
+Remote processes can send Hive statements to Hive through Thrift.
+HIVE thrift allows access to HIVE over a single port.
+Thrift is a software framework for scalable cross language services development.
+Thrift allows clients using other languages to programmatically access HIVE remotely.
+A Thrift service provides remote access from other processes.
+Access using JDBC and ODBC are provided, too. They are implemented on top of the Thrift service
+MetaStore
+
+The service that maintains “metadata" information, such as table schemas.
+
+Hive requires this service to be running.
+
+support. By default, it uses a built-in Derby SQL server, which provides limited, single-process SQL for hive production environment,metastore service should run in an isolated jvm.
+Hive processes can communicate with metastore services using thrift Hive metastore data is persisted in acid database such as db/mysql In hive-default.xml.template file we can set name to store in local or warehouse
+<name> hive.metastore.warehouse.dir</name> <name>hive.metastore.local</name>
+
+Hive metastore is a database that stores metadata about your Hive tables (eg. table name, column names and types, table location, storage handler being used, number of buckets in the table, sorting columns if any, partition columns if any, etc.). When you create a table, this metastore gets updated with the information related to the new table which gets queried when you issue queries on that table.
+
+Avro
+
+Avro is a serialization format developed to address some of the common problems associated with evolving other serialization formats.
+
+Some of the benefits are:
+rich data structures, fast binary format, support for remote procedure calls, and built-in schema evolution
+JSON
+JSON (JavaScript Object Notation) is a lightweight data serialization format used commonly in web-based applications.
+HDFS
+(HDFS) A distributed, resilient file system for data storage (optimized for scanning large contiguous blocks of data on hard disks.) Distribution across a cluster provides horizontal scaling of data storage.
+
+Blocks of HDFS files are replicated across the cluster (by default, three times) to prevent data loss when hard drives or whole servers fail.
+Modes
+Strict—these are used to protect large data in partitioned tables.Instead of extracting all data from partitioned table strict mode is safety measure which allows queries with where cause only on partitones
+
+
+Set hive.mapred.mode=strict;
+Select * from employee where Nonstrict
+
+Hive commands
+-d a=b –define a=b
+-e –sql from command line
+Hive –e “select * from"
+-f<filename>-sql from files
+-H –help
+-h<hostname>connects to hive server on remote host
+--hiveconf<property=value>
+-i<filename> initialization sql file
+-p<port> connecting to hive server on port number
+-s/--silent mode in interactive shell
+-v verbose
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+ 
+Set hive.mapred.mode=strict;
+Select * from employee where Nonstrict
+ 
+Hive commands
+-d a=b –define a=b
+-e –sql from command line
+Hive –e “select * from"
+-f<filename>-sql from files
+-H –help
+-h<hostname>connects to hive server on remote host
+--hiveconf<property=value>
+-i<filename> initialization sql file
+-p<port> connecting to hive server on port number
+-s/--silent mode in interactive shell
+-v verbose
+Job
+In the Hadoop context, a job is a self-contained workflow submitted to MapReduce.
+
+It encompasses all the work required to perform a complete calculation, from reading input to generating output.
+
+Job Tracker
+The MapReduce JobTracker will decompose the job into one or more tasks for distribution and execution around the cluster.
+
+The top-level controller of all jobs using Hadoop’s MapReduce.
+The JobTracker accepts job submissions, determines what tasks to run and where to run them, monitors their execution, restarts failed tasks as needed, and provides a web console for monitoring job and task execution,
+viewing logs, etc
+
+Task
+
+In the MapReduce context, a task is the smallest unit of work performed on a single cluster node, as part of an overall job.
+By default each task involves a separate JVM process.
+Each map and reduce invocation will have its own task.
+
+Input Format
+
+The input format determines how input streams, usually from files, are split into records.
+
+A SerDe handles parsing the record into columns. A custom input format can be specified when creating a table using the INPUTFORMAT clause.
+
+Output Format
+
+The output format determines how records are written to output streams, usually to files.
+A SerDe handles serialization of each record into an appropriate byte stream.
+
+A custom output format can be specified when creating a table using the OUTPUTFORMAT clause.
+
+The output format for the default STORED AS TEXTFILE specification is implemented by the Java object named org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+
+Partitioner
+
+Partitioner controls the partitioning of the keys of the intermediate map-outputs. The key (or a subset of the key) is used to derive the partition, typically by a hash function. The total number of partitions is the same as the number of reduce tasks for the job.
+Metastore
+
+hive stores schema and other Hive uses to store table schemas and other metadata for hive production environment,metastore service should run in an isolated jvm.
+Hive processes can communicate with metastore services using thrift Hive metastore data is persisted in acid database such as db/mysql In hive-default.xml.template file we can set name to store in local or warehouse
+<name> hive.metastore.warehouse.dir</name>
+<name>hive.metastore.local</name>
+
+
+storage formats
+Text/sequencefile/rc file
+Rc-recordcolumn file
+Crate table xx(a int) stored as rc file;
+--compression
+Set hive.exec.compress.output=true
+Set mapred.output.compression.codec=;
+--import
+Insert overwrite table xx Select * from
+For compression and serialization we use rcfile and sequencefile
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+ 
+storage formats
+Text/sequencefile/rc file
+Rc-recordcolumn file
+Crate table xx(a int) stored as rc file;
+--compression
+Set hive.exec.compress.output=true
+Set mapred.output.compression.codec=;
+--import
+Insert overwrite table xx Select * from
+For compression and serialization we use rcfile and sequencefile
+Following classes are used by Hive to read and write HDFS files
+•TextInputFormat/HiveIgnoreKeyTextOutputFormat: These 2 classes read/write data in plain
+text file format.
+•SequenceFileInputFormat/SequenceFileOutputFormat: These 2 classes read/write data in
+hadoop SequenceFile format.
+
+Hive natively supports text file format, however hive also has support for other binary formats. Hive supports Sequence, Avro, RCFiles.
+
+Sequence files :-General binary format. splittable, compressible and row oriented.a typical example can be. if we have lots of small file, we may use sequence file as a container, where file name can be a key and content could stored as value. it support compression which enables huge gain in performance.
+Avro datafiles:-Same as Sequence file splittable, compressible and row oriented except support of schema evolution and multilingual binding support.
+RCFiles :-Record columnar file, it’s a column oriented storage file. it breaks table in row split. in each split stores that value of first row in first column and followed sub subsequently..
+
+Joins
+
+Innerjoins-returns all rows when there is atleast one match in both tables
+
+Leftouterjoin-returns all rows from left table and matched rows from right table
+
+Right join-returns all rows from right table and matched rows from left
+
+Full join-returns all rows
+
+Map join-join can be performed as map only job
+One of the table being joined should be small
+
+
+Select /*mapjoin*/ a.key,a.value from a join b on a.key=b.key
+1
+2
+ 
+Select /*mapjoin*/ a.key,a.value from a join b on a.key=b.key
+Oredrby/sortby/distributedby/clusterby
+Orderby-ascending or desc pushing all dat through one reducer
+
+Sortby-orders data at each of n reducers but each reducer can receive overlapping ranges of data.you end up with one or more sotrted files with overlapping ranges
+
+Distributeby-ensures each of n reducers gets non overlapping ranges of x,but doesnot sort the o/p of each reducer.u end with n or more unsorted files with non overlapping ranges
+
+Clusterby-ensures each of n reducers gets non overlapping ranges,then sorts by those changes at reducers.this gives global ordering and is same as doing distributed by and sort by.you end up with n or more sorted files with non overlapping ranges
+
+Cluster by is more scalable than order by sampling
+Tablesample sample ur table It can return subsets of buckets bucket smaplingOr hdfs blocks block sampling or only first n elements from each ip split compression To optimized memory streams are compressed using CODEC which is specified as table property.
+RC file, ORC, Sequence, LZO, can be compressed.
+
+security
+Unmask value. P
+<property>
+<name> hive.files.umask.value</name>
+<description> the dfs umask value for hive created folder </description>
+</property>
+
+Hcatalog
+
+It is a metadata and table management system for Hadoop platform. It enables storage of data in any format regardless of any structure.
+It supports reading and writing files in any format for which a hive SerDe can be written .
+By default, HCatalog supports RCFile, CSV, JSON and Sequence File formats.
+To use a custom format you must provide input format, output format and SerDe.
+HCatalog is built on top a HIVE metastore and incorporates components from the HIVE DDL.
+HCatalog provides read and write interfaces for PIG and mapreduce and used HIVE Command line interface for issuing data definition and metadata exploration commands.
+It also presents a REST interface to allow external tools to access to HIVE DDL operations, such as “create table" and “describle table".
+HCatalog presents a relational view of Data
+Data is stored in tables and these tables can be places into databases.
+Tables can also be partitioned on one more keys.
+For a given value of a key there will be one partition that contains all rows with that value
+
+InputFormat
+
+The InputFormat class is one of the fundamental classes of the MapReduce framework. It is responsible for defining two main things: InputSplit and RecordReader
+
+Input Split
+
+InputSplit defines both the size of individual map tasks (and, consequently, the number of map tasks) and its “ideal" execution server (locality).
+
+Record Reader
+
+The RecordReader is responsible for actually reading records from the input file, and submitting them (as key/value pairs) to the mapper.
+
+Counters
+Hadoop provides some inbuilt counters for every job, for purposes like counting the number of records or bytes processed
+
+Map Reduce
+
+MapReduce is designed to scale computation horizontally by decomposing map and reduce steps into tasks and distributing those tasks across a cluster.
+The MapReduce runtime provided by Hadoop handles decomposition of a job into tasks, distribution around the cluster, movement of a particular task to the machine that holds the data for the task , movement of data
+
+to tasks (as needed), and automated reexecution of failed tasks and other error recovery and logging services.
+
+Streaming
+
+Streaming offers an alternative way to transform data.
+During a streaming job, the Hadoop Streaming API opens an I/O pipe to an external process.
+Data is then passed to the process, which operates on the data it reads from the standard input and writes the results out through the standard output, and back to the Streaming API job.
+
+Hive provides several clauses to use streaming:
+MAP(), REDUCE(), and TRANSFORM().
+
+Speculative Exection
+
+Speculative execution is a feature of Hadoop that launches a certain number of duplicate tasks.
+While this consumes more resources computing duplicate copies of data
+that may be discarded, the goal of this feature is to improve overall job progress by getting individual task results faster, and detecting then black-listing slow-running TaskTrackers.
+
+Distributed Cache
+
+Distributed Cache is a facility provided by the MapReduce framework to cache files (text, archives, jars and so on) needed by applications during execution of the job.
+The framework will copy the necessary files to the slave node before any tasks for the job are executed on that node.
+
+WebDav
+WebDAV is an Internet-based open standard that enables editing Web sites over HTTP and HTTPS connections. WebDAV yields several advantages over the File Transfer Protocol (FTP), the most notable advantages are more security options and the ability to use a single TCP port for all communication.
+
+Fair Scheduler
+
+In FairScheduler, Jobs, which are submitted to queues, are placed into pools.
+Each pool is assigned a number of task slots based on a number of factors including the total slot capacity of the cluster, the current demand (where “demand" is the number of tasks in a pool) on other pools, minimum slot guarantees, and available slot capacity.
+Pools may optionally have minimum slot guarantees. These pools are said to have an SLA, with the minimum number of slots providing the vehicle for ensuring task scheduling within a given period of time.
+Beyond the minimum slot guarantees, each pool gets an equal number of the remaining available slots on the cluster; this is where the “fair share" portion of the name comes from
+Oozie
+Oozie is a workflow/coordination system that you can use to manage Apache Hadoop jobs.It implements a set of remote Web Services APIs that can be invoked from Oozie client components and third-party applications.
+
+A single Oozie server implements all four functional Oozie components:
+Oozie Workflow This component provides support for defining and executing a controlled sequence of MapReduce, Hive, and Pig jobs.
+? Oozie Coordinator — This provides support for the automatic execution of Workflows
+based on the events and the presence of system resources.
+? Oozie Bundles — This engine enables you to define and execute a “bundle" of applications, thus providing a way to batch together a set of Coordinator applications that can be managed together.
+? Oozie Service Level Agreement (SLA) — This provides support for tracking the execution of Workflow applications.
+
+Common join versus map-side join
+“common join” to refer to a join operation where
+one or more reducers are required to physically join the table rows. Map-side joins, as the
+name would suggest, perform the join across parallel map tasks and eliminate the need
+for the reduce phase.
+
+Kerberos
+
+“Kerberos Authentication,"
+describes the Kerberos protocol, and discusses how Hadoop uses Kerberos authentication for Remote Procedure Calls (RPCs), and how Hadoop web consoles can be protected with Kerberos authentication using HTTP Simple and Protected Negotiation Mechanism (SPNEGO).
+
+Hadoop uses the Kerberos protocol to authenticate users to Hadoop, and to authenticate Hadoop services to each other.
+
+Kerberos relies on the concept of “tickets" in order to work. In Kerberos, three parties are involved:
+
+A client (which can be a user or service) that requests access to a resource.
+A requested resource (which is typically a service).
+The Kerberos Key Distribution Center (KDC), which includes an Authentication Service (AS) and a Ticket Granting Service (TGS). The KDC is the main hub of all communications.
+Apache Knox Gateway
+Knox provides perimeter security for Hadoop clusters
+
+Provide security to all of Hadoop’s REST & HTTP services
+
+Support for REST APIs for Apache Ambari, Apache Falcon and Apache Ranger
+
+Expose Hadoop’s REST/HTTP services without revealing network details, with SSL provided out of box
